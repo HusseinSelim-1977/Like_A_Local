@@ -90,7 +90,38 @@
     <div id="cursor-container"><div class="cursor-dot" id="dot"></div><div class="cursor-ring" id="ring"></div></div>
     <nav><div class="brand">LikeALocal</div><div class="nav-actions"><button class="btn" onclick="toggleMenu(event)">Menu</button><button class="btn btn-primary" id="authBtn" onclick="toggleAuth(event)">Sign In</button></div></nav>
     <div class="menu-overlay" id="menu"><button class="menu-exit-btn" onclick="toggleMenu(event)">✕</button><button class="menu-link" onclick="handleMenuClick(event,'home')">Home</button><button class="menu-link" onclick="handleMenuClick(event,'favorites')">Favorites</button><button class="menu-link" onclick="handleMenuClick(event,'settings')">Settings</button><button class="menu-link" onclick="toggleAuth(event);closeMenu(event)">Account</button></div>
-    <div class="modal-overlay" id="authModal"><div class="modal-box"><h2 style="font-family:var(--font-display);margin-bottom:20px;color:white;">Welcome Back</h2><div class="form-group"><label>Email</label><input type="email" class="form-input" id="emailInput" placeholder="user@example.com"></div><div class="form-group"><label>Password</label><input type="password" class="form-input" id="passwordInput" placeholder="••••••"></div><button class="btn btn-primary" style="width:100%;" onclick="handleLogin(event)">Login</button><p style="margin-top:15px;text-align:center;color:#666;font-size:0.8rem;">(Firebase Auth Active)</p><div style="margin-top:20px;text-align:right;"><button class="btn" style="border:none;color:#666;" onclick="toggleAuth(event)">Cancel</button></div></div></div>
+    
+    <!-- AUTH MODAL WITH LOGIN / SIGNUP TOGGLE -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-box">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 id="authTitle" style="font-family:var(--font-display);font-size:1.8rem;color:white;margin:0;">Welcome Back</h2>
+                <button id="authToggleBtn" class="btn" style="padding:5px 15px;font-size:0.75rem;" onclick="toggleAuthMode()">Create Account</button>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="form-group"><label>Email</label><input type="email" class="form-input" id="loginEmail" placeholder="user@example.com"></div>
+                <div class="form-group"><label>Password</label><input type="password" class="form-input" id="loginPassword" placeholder="••••••"></div>
+                <button class="btn btn-primary" style="width:100%;" onclick="handleLogin(event)">Login</button>
+                <p style="margin-top:15px;text-align:center;color:#666;font-size:0.8rem;">(Secure Firebase Auth)</p>
+            </div>
+
+            <!-- Signup Form (Hidden by default) -->
+            <div id="signupForm" style="display:none;">
+                <div class="form-group"><label>Email</label><input type="email" class="form-input" id="signupEmail" placeholder="user@example.com"></div>
+                <div class="form-group"><label>Password</label><input type="password" class="form-input" id="signupPassword" placeholder="Min 6 characters"></div>
+                <div class="form-group"><label>Confirm Password</label><input type="password" class="form-input" id="signupConfirm" placeholder="••••••"></div>
+                <button class="btn btn-primary" style="width:100%;" onclick="handleSignup(event)">Create Account</button>
+                <p style="margin-top:15px;text-align:center;color:#666;font-size:0.8rem;">(Secure Firebase Auth)</p>
+            </div>
+
+            <div style="margin-top:20px;text-align:right;">
+                <button class="btn" style="border:none;color:#666;" onclick="toggleAuth(event)">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <main id="app">
         <section id="home-view" class="view-section"><div class="hero"><h1>Discover<br><span>The World</span></h1><p style="color:rgba(255,255,255,0.8);margin-bottom:40px;max-width:600px;margin-left:auto;margin-right:auto;">Curated 4K destinations, local insights, and AI-powered recommendations.</p><div class="search-container"><input type="text" class="search-input" id="searchInput" placeholder="Search city (e.g., Dubai)..."><button class="mic-btn" id="micBtn" title="Use Microphone to Search">🎙️</button></div></div><div class="card-grid" id="grid"></div></section>
         <section id="detail-view" class="view-section"><button class="back-btn" onclick="goHome(event)">←</button><div id="detail-container"></div></section>
@@ -98,29 +129,84 @@
     <div class="ai-fab" onclick="toggleChat(event)">🤖</div>
     <div class="chat-window" id="chatWindow"><div class="chat-header"><span>LocalGuide AI</span><span style="cursor:pointer" onclick="toggleChat(event)">×</span></div><div class="chat-body" id="chatBody"><div class="msg ai">Hello! I'm your AI local guide. I can tell you about food, views, or hotels for any place you select.</div></div><div class="chat-input-area"><input type="text" class="chat-input" id="chatInput" placeholder="Ask about current place..."><button class="btn-menu" style="padding:5px 15px;" onclick="sendChat(event)">Send</button></div></div>
 
+    <!-- Firebase SDK Scripts -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+    
     <script>
         let currentUser = null, currentDestId = null, destinations = [];
-        const firebaseConfig = { apiKey: "AIzaSyDux6rYdTWEbET_HLyUrZzty00eapSQlCs", authDomain: "like-a-local-2.firebaseapp.com", projectId: "like-a-local-2", storageBucket: "like-a-local-2.appspot.com", messagingSenderId: "569732795083", appId: "1:569732795083:web:DUMMY_APP_ID_REPLACE_LATER" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDux6rYdTWEbET_HLyUrZzty00eapSQlCs", 
+            authDomain: "like-a-local-2.firebaseapp.com", 
+            projectId: "like-a-local-2", 
+            storageBucket: "like-a-local-2.appspot.com", 
+            messagingSenderId: "569732795083", 
+            appId: "1:569732795083:web:DUMMY_APP_ID_REPLACE_LATER" 
+        };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore(), auth = firebase.auth();
 
-        window.onload = async () => { initCursor(); initBackground(); await loadDestinations(); setupSearch(); setupVoiceSearch(); };
+        window.onload = async () => { 
+            initCursor(); initBackground(); await loadDestinations(); setupSearch(); setupVoiceSearch(); 
+        };
+        
         auth.onAuthStateChanged(async (user) => {
             const authBtn = document.getElementById('authBtn');
-            if (user) { currentUser = { uid: user.uid, email: user.email }; authBtn.innerText = 'Logout'; authBtn.classList.remove('btn-primary'); authBtn.onclick = handleLogout; await loadUserFavorites(); }
-            else { currentUser = null; authBtn.innerText = 'Sign In'; authBtn.classList.add('btn-primary'); authBtn.onclick = toggleAuth; destinations.forEach(d => d.isFavorite = false); renderGrid(); }
+            if (user) { 
+                currentUser = { uid: user.uid, email: user.email }; 
+                authBtn.innerText = 'Logout'; 
+                authBtn.classList.remove('btn-primary'); 
+                authBtn.onclick = handleLogout; 
+                await loadUserFavorites(); 
+            } else { 
+                currentUser = null; 
+                authBtn.innerText = 'Sign In'; 
+                authBtn.classList.add('btn-primary'); 
+                authBtn.onclick = toggleAuth; 
+                destinations.forEach(d => d.isFavorite = false); 
+                renderGrid(); 
+            }
         });
 
-        function initCursor() { const dot = document.getElementById('dot'), ring = document.getElementById('ring'); document.addEventListener('mousemove', e => { dot.style.left = e.clientX+'px'; dot.style.top = e.clientY+'px'; setTimeout(() => { ring.style.left = e.clientX+'px'; ring.style.top = e.clientY+'px'; }, 50); }); ['a','button','.card','.mic-btn','.ai-fab','.chat-input','.form-input','.fav-btn','.menu-exit-btn'].forEach(sel => document.querySelectorAll(sel).forEach(el => { el.addEventListener('mouseenter', () => document.body.classList.add('hovering')); el.addEventListener('mouseleave', () => document.body.classList.remove('hovering')); })); }
-        function initBackground() { document.addEventListener('mousemove', e => { const c = ['#FF006E','#3A86FF','#FFBE0B','#8338EC']; document.body.style.background = `radial-gradient(circle at ${e.clientX}px ${e.clientY}px, ${c[0]}, ${c[1]}, #000)`; }); }
+        function initCursor() { 
+            const dot = document.getElementById('dot'), ring = document.getElementById('ring'); 
+            document.addEventListener('mousemove', e => { 
+                dot.style.left = e.clientX+'px'; dot.style.top = e.clientY+'px'; 
+                setTimeout(() => { ring.style.left = e.clientX+'px'; ring.style.top = e.clientY+'px'; }, 50); 
+            }); 
+            ['a','button','.card','.mic-btn','.ai-fab','.chat-input','.form-input','.fav-btn','.menu-exit-btn'].forEach(sel => 
+                document.querySelectorAll(sel).forEach(el => { 
+                    el.addEventListener('mouseenter', () => document.body.classList.add('hovering')); 
+                    el.addEventListener('mouseleave', () => document.body.classList.remove('hovering')); 
+                })
+            ); 
+        }
+        function initBackground() { 
+            document.addEventListener('mousemove', e => { 
+                const c = ['#FF006E','#3A86FF','#FFBE0B','#8338EC']; 
+                document.body.style.background = `radial-gradient(circle at ${e.clientX}px ${e.clientY}px, ${c[0]}, ${c[1]}, #000)`; 
+            }); 
+        }
 
         async function loadDestinations() {
-            try { const snap = await db.collection('destinations').orderBy('createdAt','desc').get(); if (snap.empty) { destinations = [{id:1,city:"Tokyo",title:"Neon Backstreets",desc:"Cyberpunk vibes.",img:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=2940",backup:"https://images.unsplash.com/photo-1551641506-ee5bf4cb45f1?q=80&w=2940",view:"Shibuya Sky",stay:"Capsule Pod",act:"Ramen Crawl",isFavorite:false},{id:2,city:"Paris",title:"Hidden Montmartre",desc:"Artists & cobblestones.",img:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2938",backup:"https://images.unsplash.com/photo-1499856871940-a09627c6d7db?q=80&w=2940",view:"Sacré-Cœur",stay:"Loft 18th",act:"Atelier",isFavorite:false},{id:3,city:"Dubai",title:"Desert Luxury",desc:"Opulence in sand.",img:"https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2940",backup:"https://images.unsplash.com/photo-1512632573886-9d0bf49b4296?q=80&w=2940",view:"Burj Top",stay:"Atlantis Suite",act:"Dune Bashing",isFavorite:false},{id:4,city:"Bali",title:"Tropical Zen",desc:"Rice terraces.",img:"https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=2940",view:"Mount Batur",stay:"Jungle Villa",act:"Yoga",isFavorite:false},{id:5,city:"New York",title:"Brooklyn Industrial",desc:"Warehouses to art.",img:"https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2940",backup:"https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=2940",view:"DUMBO",stay:"Converted Factory",act:"Underground Jazz",isFavorite:false},{id:6,city:"Iceland",title:"Aurora Borealis",desc:"Fire & Ice.",img:"https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=3159",backup:"https://images.unsplash.com/photo-1476610182048-b716b8518aae",view:"Vik Beach",stay:"Glass Igloo",act:"Glacier Hike",isFavorite:false},{id:7,city:"Swiss Alps",title:"Matterhorn",desc:"Peak luxury.",img:"https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2938",backup:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2940",view:"Gornergrat",stay:"Chalet",act:"Skiing",isFavorite:false},{id:8,city:"Santorini",title:"Caldera Views",desc:"Sunset perfection.",img:"https://images.unsplash.com/photo-1613395877344-13d4c79e4df4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?q=80&w=2940",view:"Oia Sunset",stay:"Cave House",act:"Catamaran",isFavorite:false}]; }
-            else { destinations = snap.docs.map(d => ({id:parseInt(d.id),...d.data(),isFavorite:false})); } renderGrid(); } catch(e){console.error(e);renderGrid();}
+            try { 
+                const snap = await db.collection('destinations').orderBy('createdAt','desc').get(); 
+                if (snap.empty) { 
+                    destinations = [
+                        {id:1,city:"Tokyo",title:"Neon Backstreets",desc:"Cyberpunk vibes.",img:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=2940",backup:"https://images.unsplash.com/photo-1551641506-ee5bf4cb45f1?q=80&w=2940",view:"Shibuya Sky",stay:"Capsule Pod",act:"Ramen Crawl",isFavorite:false},
+                        {id:2,city:"Paris",title:"Hidden Montmartre",desc:"Artists & cobblestones.",img:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2938",backup:"https://images.unsplash.com/photo-1499856871940-a09627c6d7db?q=80&w=2940",view:"Sacré-Cœur",stay:"Loft 18th",act:"Atelier",isFavorite:false},
+                        {id:3,city:"Dubai",title:"Desert Luxury",desc:"Opulence in sand.",img:"https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2940",backup:"https://images.unsplash.com/photo-1512632573886-9d0bf49b4296?q=80&w=2940",view:"Burj Top",stay:"Atlantis Suite",act:"Dune Bashing",isFavorite:false},
+                        {id:4,city:"Bali",title:"Tropical Zen",desc:"Rice terraces.",img:"https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=2940",view:"Mount Batur",stay:"Jungle Villa",act:"Yoga",isFavorite:false},
+                        {id:5,city:"New York",title:"Brooklyn Industrial",desc:"Warehouses to art.",img:"https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2940",backup:"https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=2940",view:"DUMBO",stay:"Converted Factory",act:"Underground Jazz",isFavorite:false},
+                        {id:6,city:"Iceland",title:"Aurora Borealis",desc:"Fire & Ice.",img:"https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=3159",backup:"https://images.unsplash.com/photo-1476610182048-b716b8518aae",view:"Vik Beach",stay:"Glass Igloo",act:"Glacier Hike",isFavorite:false},
+                        {id:7,city:"Swiss Alps",title:"Matterhorn",desc:"Peak luxury.",img:"https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2938",backup:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2940",view:"Gornergrat",stay:"Chalet",act:"Skiing",isFavorite:false},
+                        {id:8,city:"Santorini",title:"Caldera Views",desc:"Sunset perfection.",img:"https://images.unsplash.com/photo-1613395877344-13d4c79e4df4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?q=80&w=2940",view:"Oia Sunset",stay:"Cave House",act:"Catamaran",isFavorite:false}
+                    ]; 
+                } else { destinations = snap.docs.map(d => ({id:parseInt(d.id),...d.data(),isFavorite:false})); } 
+                renderGrid(); 
+            } catch(e){console.error(e);renderGrid();}
         }
 
         function toggleMenu(e){if(e)e.preventDefault();document.getElementById('menu').classList.toggle('active');}
@@ -129,13 +215,82 @@
         function setupSearch(){document.getElementById('searchInput').addEventListener('input',e=>{const q=e.target.value.toLowerCase();renderGrid(destinations.filter(d=>d.city.toLowerCase().includes(q)||d.title.toLowerCase().includes(q)));});}
         function filterGrid(type){document.getElementById('detail-view').classList.remove('slide-in-active');document.getElementById('home-view').classList.remove('slide-out-left');window.scrollTo(0,0);if(type==='favorites'){const f=destinations.filter(d=>d.isFavorite);f.length?renderGrid(f):alert("No favorites yet!");renderGrid();}else renderGrid();}
         window.handleImageError=(img,fb)=>{img.src=fb;};
-        function setupVoiceSearch(){const btn=document.getElementById('micBtn'),inp=document.getElementById('searchInput'),sec=window.location.protocol==='https:'||window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1',Rec=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Rec){btn.style.display='none';return;}const rec=new Rec();rec.continuous=false;rec.lang='en-US';rec.interimResults=false;const startReal=()=>{try{rec.start();btn.classList.add('listening');}catch(e){try{rec.stop();}catch(e){}setTimeout(startReal,200);}};const sim=()=>{btn.classList.add('listening');alert("SIMULATION: Microphone blocked on non-HTTPS. Simulating 'Dubai'");setTimeout(()=>{inp.value="Simulated: Dubai";renderGrid(destinations.filter(d=>d.city.toLowerCase().includes('dubai')));btn.classList.remove('listening');btn.classList.add('success');setTimeout(()=>btn.classList.remove('success'),2000);},2000);};btn.onclick=()=>sec?startReal():sim();rec.onstart=()=>btn.classList.add('listening');rec.onresult=e=>{inp.value=e.results[0][0].transcript;const q=e.results[0][0].transcript.toLowerCase();renderGrid(destinations.filter(d=>d.city.toLowerCase().includes(q)||d.title.toLowerCase().includes(q)));btn.classList.remove('listening');btn.classList.add('success');setTimeout(()=>btn.classList.remove('success'),2000);};rec.onerror=e=>{btn.classList.remove('listening');if(e.error==='not-allowed')alert("Microphone denied.");else if(e.error==='network')alert("Network error.");};rec.onend=()=>btn.classList.remove('listening');}
+        function setupVoiceSearch(){
+            const btn=document.getElementById('micBtn'),inp=document.getElementById('searchInput'),sec=window.location.protocol==='https:'||window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1',Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+            if(!Rec){btn.style.display='none';return;}
+            const rec=new Rec();rec.continuous=false;rec.lang='en-US';rec.interimResults=false;
+            const startReal=()=>{try{rec.start();btn.classList.add('listening');}catch(e){try{rec.stop();}catch(e){}setTimeout(startReal,200);}};
+            const sim=()=>{btn.classList.add('listening');alert("SIMULATION: Microphone blocked on non-HTTPS. Simulating 'Dubai'");setTimeout(()=>{inp.value="Simulated: Dubai";renderGrid(destinations.filter(d=>d.city.toLowerCase().includes('dubai')));btn.classList.remove('listening');btn.classList.add('success');setTimeout(()=>btn.classList.remove('success'),2000);},2000);};
+            btn.onclick=()=>sec?startReal():sim();
+            rec.onstart=()=>btn.classList.add('listening');
+            rec.onresult=e=>{inp.value=e.results[0][0].transcript;const q=e.results[0][0].transcript.toLowerCase();renderGrid(destinations.filter(d=>d.city.toLowerCase().includes(q)||d.title.toLowerCase().includes(q)));btn.classList.remove('listening');btn.classList.add('success');setTimeout(()=>btn.classList.remove('success'),2000);};
+            rec.onerror=e=>{btn.classList.remove('listening');if(e.error==='not-allowed')alert("Microphone denied.");else if(e.error==='network')alert("Network error.");};
+            rec.onend=()=>btn.classList.remove('listening');
+        }
         function renderGrid(data=destinations){document.getElementById('grid').innerHTML=data.map(d=>`<div class="card" onclick="openDetail(${d.id})"><button class="fav-btn ${d.isFavorite?'active':''}" onclick="toggleFavorite(event,${d.id})">${d.isFavorite?'❤️':'🤍'}</button><img src="${d.img}" class="card-img" onerror="handleImageError(this,'${d.backup}')" alt="${d.title}"><div class="card-info"><span class="card-tag">${d.city}</span><h3>${d.title}</h3></div></div>`).join('');}
+        
         async function toggleFavorite(e,id){if(e)e.stopPropagation();if(!currentUser?.uid){toggleAuth();return;}const ref=db.collection('users').doc(currentUser.uid).collection('favorites').doc(String(id));const doc=await ref.get();if(doc.exists)await ref.delete();else await ref.set({addedAt:firebase.firestore.FieldValue.serverTimestamp()});const d=destinations.find(x=>x.id===id);if(d){d.isFavorite=!d.isFavorite;renderGrid();}}
         async function loadUserFavorites(){if(!currentUser?.uid)return;const snap=await db.collection('users').doc(currentUser.uid).collection('favorites').get();destinations.forEach(d=>d.isFavorite=false);snap.forEach(doc=>{const d=destinations.find(x=>x.id===parseInt(doc.id));if(d)d.isFavorite=true;});renderGrid();}
+        
         function toggleAuth(e){if(e)e.stopPropagation();document.getElementById('authModal').classList.toggle('active');}
-        async function handleLogin(e){if(e)e.preventDefault();const em=document.getElementById('emailInput').value,pw=document.getElementById('passwordInput').value,b=document.querySelector('#authModal .btn-primary');b.innerText='Authenticating...';try{await auth.signInWithEmailAndPassword(em,pw);toggleAuth();alert('Welcome back!');}catch(err){alert('Login failed: '+err.message);}b.innerText='Login';}
+        function toggleAuthMode() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const title = document.getElementById('authTitle');
+            const btn = document.getElementById('authToggleBtn');
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block'; signupForm.style.display = 'none';
+                title.innerText = 'Welcome Back'; btn.innerText = 'Create Account';
+            } else {
+                loginForm.style.display = 'none'; signupForm.style.display = 'block';
+                title.innerText = 'Create Account'; btn.innerText = 'Sign In';
+            }
+        }
+
+        async function handleLogin(e){
+            if(e)e.preventDefault();
+            const em=document.getElementById('loginEmail').value,pw=document.getElementById('loginPassword').value,b=document.querySelector('#loginForm .btn-primary');
+            b.innerText='Authenticating...';
+            try{await auth.signInWithEmailAndPassword(em,pw);toggleAuth();alert('Welcome back!');}catch(err){alert('Login failed: '+err.message);}
+            b.innerText='Login';
+        }
+
+        // 🔥 UPDATED: Creates Auth User + Saves to Firestore Database
+        async function handleSignup(e){
+            if(e)e.preventDefault();
+            const em=document.getElementById('signupEmail').value.trim();
+            const pw=document.getElementById('signupPassword').value;
+            const c=document.getElementById('signupConfirm').value;
+            const btn=document.querySelector('#signupForm .btn-primary');
+            
+            if(!em||!pw){alert('Please fill in all fields.');return;}
+            if(pw.length<6){alert('Password must be at least 6 characters.');return;}
+            if(pw!==c){alert('Passwords do not match.');return;}
+            
+            btn.innerText='Creating Account...';
+            try {
+                // 1. Create Firebase Auth Account
+                const userCredential = await auth.createUserWithEmailAndPassword(em, pw);
+                const user = userCredential.user;
+
+                // 2. Record User in Firestore Database
+                await db.collection('users').doc(user.uid).set({
+                    email: user.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    settings: { notifications: true, locationEnabled: true, theme: 'dark' }
+                });
+
+                // 3. Success UI Feedback
+                toggleAuth();
+                alert('Account created successfully! Welcome to LikeALocal.');
+            } catch (err) {
+                alert('Signup failed: ' + err.message);
+            }
+            btn.innerText='Create Account';
+        }
+
         async function handleLogout(){try{await auth.signOut();alert('Logged out.');}catch(err){alert('Logout failed: '+err.message);}}
+        
         function openDetail(id){currentDestId=id;const d=destinations.find(x=>x.id===id);if(!d)return;document.getElementById('detail-container').innerHTML=`<div class="detail-header"><img src="${d.img}" onerror="handleImageError(this,'${d.backup}')"></div><div class="detail-content"><h2>${d.title}</h2><p style="color:#aaa;margin-bottom:30px;">${d.desc}</p><div class="feature-block"><h3>👁️ The View</h3><p>${d.view}</p></div><div class="feature-block"><h3>🏠 Place to Stay</h3><p>${d.stay}</p></div><div class="feature-block"><h3>🎯 Activity</h3><p>${d.act}</p></div></div>`;document.getElementById('home-view').classList.add('slide-out-left');document.getElementById('detail-view').classList.add('slide-in-active');}
         function goHome(e){if(e)e.preventDefault();document.getElementById('home-view').classList.remove('slide-out-left');document.getElementById('detail-view').classList.remove('slide-in-active');}
         function toggleChat(e){if(e)e.stopPropagation();document.getElementById('chatWindow').classList.toggle('active');}
