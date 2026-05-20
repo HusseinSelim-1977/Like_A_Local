@@ -1,147 +1,566 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LikeALocal | Premium Experience</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root { --c-bg-1:#FF006E; --c-bg-2:#3A86FF; --c-bg-3:#FFBE0B; --c-bg-4:#8338EC; --c-text:#ffffff; --c-card-bg:rgba(20,20,20,0.85); --glass-border:rgba(255,255,255,0.2); --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif; }
-        *{box-sizing:border-box;margin:0;padding:0;cursor:none;user-select:none;}
-        body{font-family:var(--font-body);color:var(--c-text);width:100vw;min-height:100vh;overflow-x:hidden;background-color:#050505;}
-        #cursor-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999999;}
-        .cursor-dot,.cursor-ring{position:fixed;border-radius:50%;transform:translate(-50%,-50%);transition:transform 0.1s;}
-        .cursor-dot{width:8px;height:8px;background:white;}
-        .cursor-ring{width:40px;height:40px;border:2px solid rgba(255,255,255,0.5);transition:width 0.3s,height 0.3s,background 0.3s,border-color 0.3s;}
-        body.hovering .cursor-ring{width:60px;height:60px;background:rgba(255,255,255,0.1);border-color:var(--c-bg-3);mix-blend-mode:difference;}
-        nav{position:fixed;top:0;left:0;width:100%;padding:25px 50px;display:flex;justify-content:space-between;align-items:center;z-index:5000;background:linear-gradient(to bottom,rgba(0,0,0,0.95),transparent);pointer-events:auto;}
-        .brand{font-family:var(--font-display);font-weight:700;font-size:1.5rem;letter-spacing:-1px;text-transform:uppercase;pointer-events:auto;}
-        .nav-actions{display:flex;gap:20px;align-items:center;}
-        button,.btn,.menu-link{cursor:none!important;pointer-events:auto!important;font-family:var(--font-body);}
-        .btn{background:rgba(255,255,255,0.1);border:1px solid white;color:white;padding:10px 25px;text-transform:uppercase;font-weight:600;font-size:0.8rem;border-radius:30px;backdrop-filter:blur(10px);transition:0.3s;}
-        .btn:hover{background:white;color:black;transform:translateY(-2px);}
-        .btn-primary{background:var(--c-bg-2);border-color:var(--c-bg-2);}
-        .btn-primary:hover{background:white;color:var(--c-bg-2);}
-        .menu-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0a;z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;transform:translateY(-100%);transition:transform 0.6s cubic-bezier(0.77,0,0.175,1);}
-        .menu-overlay.active{transform:translateY(0);}
-        .menu-link{font-family:var(--font-display);font-size:4rem;color:white;text-decoration:none;margin:20px 0;transition:0.3s;position:relative;background:none;border:none;text-transform:uppercase;}
-        .menu-link:hover{color:var(--c-bg-3);transform:translateX(20px);}
-        .menu-exit-btn{position:absolute;top:30px;right:30px;background:none;border:1px solid rgba(255,255,255,0.3);color:white;width:50px;height:50px;border-radius:50%;font-size:1.5rem;display:flex;justify-content:center;align-items:center;transition:0.3s;z-index:100000;}
-        .menu-exit-btn:hover{background:white;color:black;transform:rotate(90deg);}
-        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(15px);z-index:100000;display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:0.3s;}
-        .modal-overlay.active{opacity:1;pointer-events:auto;}
-        .modal-box{background:#1a1a1a;padding:40px;width:400px;border:1px solid var(--glass-border);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5);transform:scale(0.9);transition:0.3s;}
-        .modal-overlay.active .modal-box{transform:scale(1);}
-        .form-group{margin-bottom:20px;}
-        .form-group label{display:block;margin-bottom:8px;font-size:0.9rem;color:#aaa;}
-        .form-input{width:100%;padding:12px;background:#2a2a2a;border:1px solid #444;color:white;border-radius:8px;outline:none;}
-        .form-input:focus{border-color:var(--c-bg-2);}
-        #app{position:relative;width:100%;min-height:100vh;perspective:1000px;}
-        .view-section{position:absolute;top:0;left:0;width:100%;min-height:100vh;transition:transform 0.8s cubic-bezier(0.22,1,0.36,1),opacity 0.8s;padding-top:120px;padding-bottom:50px;}
-        #home-view{transform:translateX(0);z-index:10;}
-        #home-view.slide-out-left{transform:translateX(-100%);opacity:0;}
-        #detail-view{transform:translateX(100%);opacity:0;background:#050505;z-index:20;padding-top:80px;}
-        #detail-view.slide-in-active{transform:translateX(0);opacity:1;}
-        .hero{text-align:center;padding:50px 20px;}
-        .hero h1{font-family:var(--font-display);font-size:clamp(3rem,10vw,8rem);line-height:0.9;margin-bottom:30px;text-transform:uppercase;}
-        .hero h1 span{color:var(--c-bg-3);}
-        .search-container{position:relative;max-width:600px;margin:0 auto 50px;background:rgba(255,255,255,0.1);border-radius:50px;padding:10px 20px;display:flex;align-items:center;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);pointer-events:auto;}
-        .search-input{flex:1;background:transparent;border:none;color:white;font-size:1rem;outline:none;}
-        .mic-btn{background:none;border:none;color:white;font-size:1.2rem;padding:10px;transition:0.3s;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;pointer-events:auto;}
-        .mic-btn.listening{background:var(--c-bg-1);animation:pulse 1s infinite;border-color:transparent;}
-        .mic-btn.success{color:var(--c-bg-3);border:1px solid var(--c-bg-3);}
-        .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:30px;padding:0 50px;}
-        .card{background:var(--c-card-bg);border-radius:20px;overflow:hidden;position:relative;height:500px;transition:0.4s;border:1px solid var(--glass-border);pointer-events:auto;}
-        .card:hover{transform:translateY(-15px) scale(1.02);z-index:5;box-shadow:0 20px 40px rgba(0,0,0,0.5);}
-        .card-img{width:100%;height:65%;object-fit:cover;transition:0.5s;background-color:#2a2a2a;}
-        .card:hover .card-img{transform:scale(1.1);}
-        .card-info{padding:25px;position:relative;}
-        .card-tag{background:var(--c-bg-4);color:white;padding:5px 12px;font-size:0.7rem;font-weight:700;border-radius:20px;text-transform:uppercase;}
-        .card h3{font-family:var(--font-display);font-size:1.8rem;margin:10px 0;}
-        .fav-btn{position:absolute;top:20px;right:20px;background:rgba(0,0,0,0.5);border:none;color:white;font-size:1.5rem;padding:5px;border-radius:50%;z-index:10;transition:0.3s;}
-        .fav-btn:hover{background:white;color:var(--c-bg-1);}
-        .fav-btn.active{color:var(--c-bg-1);}
-        .back-btn{position:fixed;top:100px;left:50px;background:rgba(0,0,0,0.5);border:1px solid white;color:white;padding:15px;border-radius:50%;z-index:50;transition:0.3s;}
-        .back-btn:hover{background:white;color:black;}
-        .detail-header{height:60vh;position:relative;background-color:#222;}
-        .detail-header img{width:100%;height:100%;object-fit:cover;}
-        .detail-content{padding:50px;max-width:900px;margin:0 auto;}
-        .feature-block{background:rgba(255,255,255,0.05);padding:30px;border-radius:15px;margin-bottom:30px;border-left:5px solid var(--c-bg-2);}
-        .ai-fab{position:fixed;bottom:30px;right:30px;width:70px;height:70px;background:var(--c-bg-1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 10px 30px rgba(255,0,110,0.4);z-index:5000;transition:0.3s;}
-        .ai-fab:hover{transform:scale(1.1) rotate(15deg);}
-        .chat-window{position:fixed;bottom:120px;right:30px;width:350px;height:500px;background:#1a1a1a;border-radius:20px;border:1px solid #333;z-index:5000;display:flex;flex-direction:column;transform-origin:bottom right;transform:scale(0);opacity:0;transition:0.4s cubic-bezier(0.175,0.885,0.32,1.275);box-shadow:0 20px 50px rgba(0,0,0,0.5);pointer-events:auto;}
-        .chat-window.active{transform:scale(1);opacity:1;}
-        .chat-header{padding:20px;background:#222;border-bottom:1px solid #333;font-weight:bold;display:flex;justify-content:space-between;}
-        .chat-body{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
-        .chat-input-area{padding:15px;border-top:1px solid #333;display:flex;gap:10px;}
-        .chat-input{flex:1;background:#333;border:none;padding:10px;color:white;border-radius:5px;}
-        .msg{padding:10px 15px;border-radius:15px;max-width:80%;font-size:0.9rem;}
-        .msg.ai{background:#333;align-self:flex-start;border-bottom-left-radius:2px;}
-        .msg.user{background:var(--c-bg-2);align-self:flex-end;border-bottom-right-radius:2px;}
-        .typing-indicator{display:inline-block;padding:10px 15px;background:#333;border-radius:15px;margin-bottom:10px;align-self:flex-start;}
-        .typing-dot{display:inline-block;width:6px;height:6px;margin-right:3px;background:#888;border-radius:50%;animation:bounce 1.4s infinite ease-in-out both;}
-        .typing-dot:nth-child(1){animation-delay:-0.32s;}
-        .typing-dot:nth-child(2){animation-delay:-0.16s;}
-        @keyframes bounce{0%,80%,100%{transform:scale(0);}40%{transform:scale(1);}}
-        @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.2);}100%{transform:scale(1);}}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LikeALocal | Premium Experience</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--c-bg-1:#FF006E;--c-bg-2:#3A86FF;--c-bg-3:#FFBE0B;--c-bg-4:#8338EC;--c-text:#fff;--c-card-bg:rgba(20,20,20,.85);--glass-border:rgba(255,255,255,.2);--font-display:'Space Grotesk',sans-serif;--font-body:'Inter',sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0;cursor:none;user-select:none}
+    body{font-family:var(--font-body);color:var(--c-text);width:100vw;min-height:100vh;overflow-x:hidden;background:#050505}
+    body.light-theme{--c-text:#000;--c-card-bg:rgba(240,240,240,.9);background:#f5f5f5}
+    #cursor-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999999}
+    .cursor-dot,.cursor-ring{position:fixed;border-radius:50%;transform:translate(-50%,-50%);transition:transform .1s}
+    .cursor-dot{width:8px;height:8px;background:var(--c-text)}
+    .cursor-ring{width:40px;height:40px;border:2px solid var(--glass-border);transition:width .3s,height .3s,background .3s,border-color .3s}
+    body.hovering .cursor-ring{width:60px;height:60px;background:rgba(255,255,255,.1);border-color:var(--c-bg-3);mix-blend-mode:difference}
+    nav{position:fixed;top:0;left:0;width:100%;padding:25px 50px;display:flex;justify-content:space-between;align-items:center;z-index:5000;background:linear-gradient(to bottom,rgba(0,0,0,.95),transparent);pointer-events:auto}
+    .brand{font-family:var(--font-display);font-weight:700;font-size:1.5rem;letter-spacing:-1px;text-transform:uppercase;pointer-events:auto}
+    .nav-actions{display:flex;gap:20px;align-items:center}
+    button,.btn,.menu-link{cursor:none!important;pointer-events:auto!important;font-family:var(--font-body)}
+    .btn{background:rgba(255,255,255,.1);border:1px solid #fff;color:#fff;padding:10px 25px;text-transform:uppercase;font-weight:600;font-size:.8rem;border-radius:30px;backdrop-filter:blur(10px);transition:.3s}
+    .btn:hover{background:#fff;color:#000;transform:translateY(-2px)}
+    .btn-primary{background:var(--c-bg-2);border-color:var(--c-bg-2)}
+    .btn-primary:hover{background:#fff;color:var(--c-bg-2)}
+    .menu-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0a;z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;transform:translateY(-100%);transition:transform .6s cubic-bezier(.77,0,.175,1)}
+    .menu-overlay.active{transform:translateY(0)}
+    .menu-link{font-family:var(--font-display);font-size:4rem;color:#fff;text-decoration:none;margin:20px 0;transition:.3s;position:relative;background:none;border:none;text-transform:uppercase}
+    .menu-link:hover{color:var(--c-bg-3);transform:translateX(20px)}
+    .menu-exit-btn{position:absolute;top:30px;right:30px;background:none;border:1px solid rgba(255,255,255,.3);color:#fff;width:50px;height:50px;border-radius:50%;font-size:1.5rem;display:flex;justify-content:center;align-items:center;transition:.3s;z-index:100000}
+    .menu-exit-btn:hover{background:#fff;color:#000;transform:rotate(90deg)}
+    .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);backdrop-filter:blur(15px);z-index:100000;display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:.3s}
+    .modal-overlay.active{opacity:1;pointer-events:auto}
+    .modal-box{background:#1a1a1a;padding:40px;width:400px;border:1px solid var(--glass-border);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);transform:scale(.9);transition:.3s}
+    .modal-overlay.active .modal-box{transform:scale(1)}
+    .form-group{margin-bottom:20px}
+    .form-group label{display:block;margin-bottom:8px;font-size:.9rem;color:#aaa}
+    .form-input{width:100%;padding:12px;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:8px;outline:none}
+    .form-input:focus{border-color:var(--c-bg-2)}
+    .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--glass-border)}
+    .toggle-label{font-size:.95rem;color:#fff}
+    .toggle-switch{position:relative;width:50px;height:26px}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#444;border-radius:26px;transition:.3s}
+    .toggle-slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+    input:checked+.toggle-slider{background:var(--c-bg-2)}
+    input:checked+.toggle-slider:before{transform:translateX(24px)}
+    .theme-options{display:flex;gap:10px;margin-top:10px}
+    .theme-btn{flex:1;padding:10px;border:1px solid var(--glass-border);border-radius:10px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;transition:.2s}
+    .theme-btn.active{background:var(--c-bg-2);border-color:var(--c-bg-2)}
+    .theme-btn:hover{transform:translateY(-2px)}
+    #app{position:relative;width:100%;min-height:100vh;perspective:1000px}
+    .view-section{position:absolute;top:0;left:0;width:100%;min-height:100vh;transition:transform .8s cubic-bezier(.22,1,.36,1),opacity .8s;padding-top:120px;padding-bottom:50px}
+    #home-view{transform:translateX(0);z-index:10}
+    #home-view.slide-out-left{transform:translateX(-100%);opacity:0}
+    #detail-view{transform:translateX(100%);opacity:0;background:#050505;z-index:20;padding-top:80px}
+    #detail-view.slide-in-active{transform:translateX(0);opacity:1}
+    #favorites-view{transform:translateX(100%);opacity:0;background:#050505;z-index:20;padding-top:80px}
+    #favorites-view.slide-in-active{transform:translateX(0);opacity:1}
+    .hero{text-align:center;padding:50px 20px}
+    .hero h1{font-family:var(--font-display);font-size:clamp(3rem,10vw,8rem);line-height:.9;margin-bottom:30px;text-transform:uppercase}
+    .hero h1 span{color:var(--c-bg-3)}
+    .search-container{position:relative;max-width:600px;margin:0 auto 50px;background:rgba(255,255,255,.1);border-radius:50px;padding:10px 20px;display:flex;align-items:center;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);pointer-events:auto}
+    .search-input{flex:1;background:transparent;border:none;color:#fff;font-size:1rem;outline:none}
+    .mic-btn{background:none;border:none;color:#fff;font-size:1.2rem;padding:10px;transition:.3s;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;pointer-events:auto}
+    .mic-btn.listening{background:var(--c-bg-1);animation:pulse 1s infinite;border-color:transparent}
+    .mic-btn.success{color:var(--c-bg-3);border:1px solid var(--c-bg-3)}
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:30px;padding:0 50px}
+    .card{background:var(--c-card-bg);border-radius:20px;overflow:hidden;position:relative;height:500px;transition:.4s;border:1px solid var(--glass-border);pointer-events:auto}
+    .card:hover{transform:translateY(-15px) scale(1.02);z-index:5;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+    .card-img{width:100%;height:65%;object-fit:cover;transition:.5s;background-color:#2a2a2a}
+    .card:hover .card-img{transform:scale(1.1)}
+    .card-info{padding:25px;position:relative}
+    .card-tag{background:var(--c-bg-4);color:#fff;padding:5px 12px;font-size:.7rem;font-weight:700;border-radius:20px;text-transform:uppercase}
+    .card h3{font-family:var(--font-display);font-size:1.8rem;margin:10px 0}
+    .fav-btn{position:absolute;top:20px;right:20px;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:1.5rem;padding:5px;border-radius:50%;z-index:10;transition:.3s}
+    .fav-btn:hover{background:#fff;color:var(--c-bg-1)}
+    .fav-btn.active{color:var(--c-bg-1)}
+    .back-btn{position:fixed;top:100px;left:50px;background:rgba(0,0,0,.5);border:1px solid #fff;color:#fff;padding:15px;border-radius:50%;z-index:50;transition:.3s}
+    .back-btn:hover{background:#fff;color:#000}
+    .detail-header{height:60vh;position:relative;background-color:#222}
+    .detail-header img{width:100%;height:100%;object-fit:cover}
+    .detail-content{padding:50px;max-width:900px;margin:0 auto}
+    .feature-block{background:rgba(255,255,255,.05);padding:30px;border-radius:15px;margin-bottom:30px;border-left:5px solid var(--c-bg-2)}
+    .ai-fab{position:fixed;bottom:30px;right:30px;width:70px;height:70px;background:var(--c-bg-1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 10px 30px rgba(255,0,110,.4);z-index:5000;transition:.3s}
+    .ai-fab:hover{transform:scale(1.1) rotate(15deg)}
+    .chat-window{position:fixed;bottom:120px;right:30px;width:350px;height:500px;background:#1a1a1a;border-radius:20px;border:1px solid #333;z-index:5000;display:flex;flex-direction:column;transform-origin:bottom right;transform:scale(0);opacity:0;transition:.4s cubic-bezier(.175,.885,.32,1.275);box-shadow:0 20px 50px rgba(0,0,0,.5);pointer-events:auto}
+    .chat-window.active{transform:scale(1);opacity:1}
+    .chat-header{padding:20px;background:#222;border-bottom:1px solid #333;font-weight:bold;display:flex;justify-content:space-between}
+    .chat-body{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+    .chat-input-area{padding:15px;border-top:1px solid #333;display:flex;gap:10px}
+    .chat-input{flex:1;background:#333;border:none;padding:10px;color:#fff;border-radius:5px}
+    .msg{padding:10px 15px;border-radius:15px;max-width:80%;font-size:.9rem}
+    .msg.ai{background:#333;align-self:flex-start;border-bottom-left-radius:2px}
+    .msg.user{background:var(--c-bg-2);align-self:flex-end;border-bottom-right-radius:2px}
+    .typing-indicator{display:inline-block;padding:10px 15px;background:#333;border-radius:15px;margin-bottom:10px;align-self:flex-start}
+    .typing-dot{display:inline-block;width:6px;height:6px;margin-right:3px;background:#888;border-radius:50%;animation:bounce 1.4s infinite ease-in-out both}
+    .typing-dot:nth-child(1){animation-delay:-.32s}
+    .typing-dot:nth-child(2){animation-delay:-.16s}
+    @keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+  </style>
 </head>
 <body>
-    <div id="cursor-container"><div class="cursor-dot" id="dot"></div><div class="cursor-ring" id="ring"></div></div>
-    <nav><div class="brand">LikeALocal</div><div class="nav-actions"><button class="btn" onclick="toggleMenu(event)">Menu</button><button class="btn btn-primary" id="authBtn" onclick="toggleAuth(event)">Sign In</button></div></nav>
-    <div class="menu-overlay" id="menu"><button class="menu-exit-btn" onclick="toggleMenu(event)">✕</button><button class="menu-link" onclick="handleMenuClick(event,'home')">Home</button><button class="menu-link" onclick="handleMenuClick(event,'favorites')">Favorites</button><button class="menu-link" onclick="handleMenuClick(event,'settings')">Settings</button><button class="menu-link" onclick="toggleAuth(event);closeMenu(event)">Account</button></div>
-    <div class="modal-overlay" id="authModal"><div class="modal-box"><h2 style="font-family:var(--font-display);margin-bottom:20px;color:white;">Welcome Back</h2><div class="form-group"><label>Email</label><input type="email" class="form-input" id="emailInput" placeholder="user@example.com"></div><div class="form-group"><label>Password</label><input type="password" class="form-input" id="passwordInput" placeholder="••••••"></div><button class="btn btn-primary" style="width:100%;" onclick="handleLogin(event)">Login</button><p style="margin-top:15px;text-align:center;color:#666;font-size:0.8rem;">(Firebase Auth Active)</p><div style="margin-top:20px;text-align:right;"><button class="btn" style="border:none;color:#666;" onclick="toggleAuth(event)">Cancel</button></div></div></div>
-    <main id="app">
-        <section id="home-view" class="view-section"><div class="hero"><h1>Discover<br><span>The World</span></h1><p style="color:rgba(255,255,255,0.8);margin-bottom:40px;max-width:600px;margin-left:auto;margin-right:auto;">Curated 4K destinations, local insights, and AI-powered recommendations.</p><div class="search-container"><input type="text" class="search-input" id="searchInput" placeholder="Search city (e.g., Dubai)..."><button class="mic-btn" id="micBtn" title="Use Microphone to Search">🎙️</button></div></div><div class="card-grid" id="grid"></div></section>
-        <section id="detail-view" class="view-section"><button class="back-btn" onclick="goHome(event)">←</button><div id="detail-container"></div></section>
-    </main>
-    <div class="ai-fab" onclick="toggleChat(event)">🤖</div>
-    <div class="chat-window" id="chatWindow"><div class="chat-header"><span>LocalGuide AI</span><span style="cursor:pointer" onclick="toggleChat(event)">×</span></div><div class="chat-body" id="chatBody"><div class="msg ai">Hello! I'm your AI local guide. I can tell you about food, views, or hotels for any place you select.</div></div><div class="chat-input-area"><input type="text" class="chat-input" id="chatInput" placeholder="Ask about current place..."><button class="btn-menu" style="padding:5px 15px;" onclick="sendChat(event)">Send</button></div></div>
+  <div id="cursor-container"><div class="cursor-dot" id="dot"></div><div class="cursor-ring" id="ring"></div></div>
+  <nav><div class="brand">LikeALocal</div><div class="nav-actions"><button class="btn" onclick="toggleMenu(event)">Menu</button><button class="btn btn-primary" id="authBtn" onclick="toggleAuth(event)">Sign In</button></div></nav>
+  <div class="menu-overlay" id="menu"><button class="menu-exit-btn" onclick="toggleMenu(event)">✕</button><button class="menu-link" onclick="handleMenuClick(event,'home')">Home</button><button class="menu-link" onclick="handleMenuClick(event,'favorites')">Favorites</button><button class="menu-link" onclick="handleMenuClick(event,'settings')">Settings</button><button class="menu-link" onclick="toggleAuth(event);closeMenu(event)">Account</button></div>
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 id="authTitle" style="font-family:var(--font-display);font-size:1.8rem;color:#fff;margin:0">Welcome Back</h2>
+        <button id="authToggleBtn" class="btn" style="padding:5px 15px;font-size:.75rem" onclick="toggleAuthMode()">Create Account</button>
+      </div>
+      <div id="loginForm">
+        <div class="form-group"><label>Email</label><input type="email" class="form-input" id="loginEmail" placeholder="user@example.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" class="form-input" id="loginPassword" placeholder="••••••"></div>
+        <button class="btn btn-primary" style="width:100%" onclick="handleLogin(event)">Login</button>
+        <p style="margin-top:15px;text-align:center;color:#666;font-size:.8rem">(Secure Firebase Auth)</p>
+      </div>
+      <div id="signupForm" style="display:none">
+        <div class="form-group"><label>Email</label><input type="email" class="form-input" id="signupEmail" placeholder="user@example.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" class="form-input" id="signupPassword" placeholder="Min 6 characters"></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" class="form-input" id="signupConfirm" placeholder="••••••"></div>
+        <button class="btn btn-primary" style="width:100%" onclick="handleSignup(event)">Create Account</button>
+        <p style="margin-top:15px;text-align:center;color:#666;font-size:.8rem">(Secure Firebase Auth)</p>
+      </div>
+      <div style="margin-top:20px;text-align:right"><button class="btn" style="border:none;color:#666" onclick="toggleAuth(event)">Cancel</button></div>
+    </div>
+  </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
-    <script>
-        let currentUser = null, currentDestId = null, destinations = [];
-        const firebaseConfig = { apiKey: "AIzaSyDux6rYdTWEbET_HLyUrZzty00eapSQlCs", authDomain: "like-a-local-2.firebaseapp.com", projectId: "like-a-local-2", storageBucket: "like-a-local-2.appspot.com", messagingSenderId: "569732795083", appId: "1:569732795083:web:DUMMY_APP_ID_REPLACE_LATER" };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(), auth = firebase.auth();
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px">
+        <h2 style="font-family:var(--font-display);font-size:1.8rem;color:#fff;margin:0">Settings</h2>
+        <button class="menu-exit-btn" style="position:static;width:40px;height:40px;font-size:1.2rem" onclick="closeSettings(event)">×</button>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Push Notifications</span>
+        <label class="toggle-switch"><input type="checkbox" id="notifToggle"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Location Services</span>
+        <label class="toggle-switch"><input type="checkbox" id="locationToggle"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Theme</span>
+        <div class="theme-options">
+          <button class="theme-btn" id="darkThemeBtn" onclick="setTheme('dark')">Dark</button>
+          <button class="theme-btn" id="lightThemeBtn" onclick="setTheme('light')">Light</button>
+        </div>
+      </div>
+      <div style="margin-top:25px;text-align:right"><button class="btn" style="border:none;color:#666" onclick="closeSettings(event)">Done</button></div>
+    </div>
+  </div>
 
-        window.onload = async () => { initCursor(); initBackground(); await loadDestinations(); setupSearch(); setupVoiceSearch(); };
-        auth.onAuthStateChanged(async (user) => {
-            const authBtn = document.getElementById('authBtn');
-            if (user) { currentUser = { uid: user.uid, email: user.email }; authBtn.innerText = 'Logout'; authBtn.classList.remove('btn-primary'); authBtn.onclick = handleLogout; await loadUserFavorites(); }
-            else { currentUser = null; authBtn.innerText = 'Sign In'; authBtn.classList.add('btn-primary'); authBtn.onclick = toggleAuth; destinations.forEach(d => d.isFavorite = false); renderGrid(); }
+  <main id="app">
+    <section id="home-view" class="view-section">
+      <div class="hero">
+        <h1>Discover<br><span>The World</span></h1>
+        <p style="color:rgba(255,255,255,.8);margin-bottom:40px;max-width:600px;margin:0 auto 40px">Curated 4K destinations, local insights, and AI-powered recommendations.</p>
+        <div class="search-container">
+          <input type="text" class="search-input" id="searchInput" placeholder="Search city (e.g., Dubai)...">
+          <button class="mic-btn" id="micBtn" title="Use Microphone to Search">🎙️</button>
+        </div>
+      </div>
+      <div class="card-grid" id="grid"></div>
+    </section>
+    <section id="detail-view" class="view-section">
+      <button class="back-btn" onclick="goHome(event)">←</button>
+      <div id="detail-container"></div>
+    </section>
+    <section id="favorites-view" class="view-section">
+      <button class="back-btn" onclick="goHome(event)">←</button>
+      <div style="padding:50px;text-align:center">
+        <h2 style="font-family:var(--font-display);font-size:2.5rem;margin-bottom:20px">Your Favorites</h2>
+        <p id="favoritesEmpty" style="color:#aaa;margin-bottom:30px">No favorites yet. Tap ❤️ on any destination to save it!</p>
+        <div class="card-grid" id="favoritesGrid"></div>
+      </div>
+    </section>
+  </main>
+  <div class="ai-fab" onclick="toggleChat(event)">🤖</div>
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header"><span>LocalGuide AI</span><span style="cursor:pointer" onclick="toggleChat(event)">×</span></div>
+    <div class="chat-body" id="chatBody"><div class="msg ai">Hello! I'm your AI local guide. I can tell you about food, views, or hotels for any place you select.</div></div>
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Ask about current place...">
+      <button class="btn-menu" style="padding:5px 15px" onclick="sendChat(event)">Send</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+
+  <script>
+    let currentUser = null, currentDestId = null, destinations = [], appSettings = { notifications: true, location: true, theme: 'dark' };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDt08_xHHR7sTUuFVOdOVifPvrvSvWc0wg",
+      authDomain: "like-a-local-2.firebaseapp.com",
+      projectId: "like-a-local-2",
+      storageBucket: "like-a-local-2.firebasestorage.app",
+      messagingSenderId: "569732795083",
+      appId: "1:569732795083:web:1baf01343b65d6a118694e",
+      measurementId: "G-Z5KMN2Y5Y0"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(), auth = firebase.auth();
+
+    window.onload = async () => {
+      loadSettings();
+      applyTheme();
+      initCursor();
+      initBackground();
+      await loadDestinations();
+      setupSearch();
+      setupVoiceSearch();
+    };
+
+    auth.onAuthStateChanged(async (user) => {
+      const authBtn = document.getElementById('authBtn');
+      if (user) {
+        currentUser = { uid: user.uid, email: user.email };
+        authBtn.innerText = 'Logout';
+        authBtn.classList.remove('btn-primary');
+        authBtn.onclick = handleLogout;
+        await loadUserFavorites();
+        await loadUserSettings();
+      } else {
+        currentUser = null;
+        authBtn.innerText = 'Sign In';
+        authBtn.classList.add('btn-primary');
+        authBtn.onclick = toggleAuth;
+        destinations.forEach(d => d.isFavorite = false);
+        renderGrid();
+        renderFavorites();
+      }
+    });
+
+    function initCursor() {
+      const dot = document.getElementById('dot'), ring = document.getElementById('ring');
+      document.addEventListener('mousemove', e => {
+        dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px';
+        setTimeout(() => { ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px'; }, 50);
+      });
+      ['a', 'button', '.card', '.mic-btn', '.ai-fab', '.chat-input', '.form-input', '.fav-btn', '.menu-exit-btn', '.theme-btn'].forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+          el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
         });
+      });
+    }
 
-        function initCursor() { const dot = document.getElementById('dot'), ring = document.getElementById('ring'); document.addEventListener('mousemove', e => { dot.style.left = e.clientX+'px'; dot.style.top = e.clientY+'px'; setTimeout(() => { ring.style.left = e.clientX+'px'; ring.style.top = e.clientY+'px'; }, 50); }); ['a','button','.card','.mic-btn','.ai-fab','.chat-input','.form-input','.fav-btn','.menu-exit-btn'].forEach(sel => document.querySelectorAll(sel).forEach(el => { el.addEventListener('mouseenter', () => document.body.classList.add('hovering')); el.addEventListener('mouseleave', () => document.body.classList.remove('hovering')); })); }
-        function initBackground() { document.addEventListener('mousemove', e => { const c = ['#FF006E','#3A86FF','#FFBE0B','#8338EC']; document.body.style.background = `radial-gradient(circle at ${e.clientX}px ${e.clientY}px, ${c[0]}, ${c[1]}, #000)`; }); }
+    function initBackground() {
+      document.addEventListener('mousemove', e => {
+        const c = ['#FF006E', '#3A86FF', '#FFBE0B', '#8338EC'];
+        document.body.style.background = `radial-gradient(circle at ${e.clientX}px ${e.clientY}px, ${c[0]}, ${c[1]}, #000)`;
+      });
+    }
 
-        async function loadDestinations() {
-            try { const snap = await db.collection('destinations').orderBy('createdAt','desc').get(); if (snap.empty) { destinations = [{id:1,city:"Tokyo",title:"Neon Backstreets",desc:"Cyberpunk vibes.",img:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=2940",backup:"https://images.unsplash.com/photo-1551641506-ee5bf4cb45f1?q=80&w=2940",view:"Shibuya Sky",stay:"Capsule Pod",act:"Ramen Crawl",isFavorite:false},{id:2,city:"Paris",title:"Hidden Montmartre",desc:"Artists & cobblestones.",img:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2938",backup:"https://images.unsplash.com/photo-1499856871940-a09627c6d7db?q=80&w=2940",view:"Sacré-Cœur",stay:"Loft 18th",act:"Atelier",isFavorite:false},{id:3,city:"Dubai",title:"Desert Luxury",desc:"Opulence in sand.",img:"https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2940",backup:"https://images.unsplash.com/photo-1512632573886-9d0bf49b4296?q=80&w=2940",view:"Burj Top",stay:"Atlantis Suite",act:"Dune Bashing",isFavorite:false},{id:4,city:"Bali",title:"Tropical Zen",desc:"Rice terraces.",img:"https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=2940",view:"Mount Batur",stay:"Jungle Villa",act:"Yoga",isFavorite:false},{id:5,city:"New York",title:"Brooklyn Industrial",desc:"Warehouses to art.",img:"https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2940",backup:"https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=2940",view:"DUMBO",stay:"Converted Factory",act:"Underground Jazz",isFavorite:false},{id:6,city:"Iceland",title:"Aurora Borealis",desc:"Fire & Ice.",img:"https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=3159",backup:"https://images.unsplash.com/photo-1476610182048-b716b8518aae",view:"Vik Beach",stay:"Glass Igloo",act:"Glacier Hike",isFavorite:false},{id:7,city:"Swiss Alps",title:"Matterhorn",desc:"Peak luxury.",img:"https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2938",backup:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2940",view:"Gornergrat",stay:"Chalet",act:"Skiing",isFavorite:false},{id:8,city:"Santorini",title:"Caldera Views",desc:"Sunset perfection.",img:"https://images.unsplash.com/photo-1613395877344-13d4c79e4df4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?q=80&w=2940",view:"Oia Sunset",stay:"Cave House",act:"Catamaran",isFavorite:false}]; }
-            else { destinations = snap.docs.map(d => ({id:parseInt(d.id),...d.data(),isFavorite:false})); } renderGrid(); } catch(e){console.error(e);renderGrid();}
+    // 🔐 Settings Persistence
+    function loadSettings() {
+      const saved = localStorage.getItem('likealocal_settings');
+      if (saved) appSettings = JSON.parse(saved);
+      document.getElementById('notifToggle').checked = appSettings.notifications;
+      document.getElementById('locationToggle').checked = appSettings.location;
+      document.getElementById(appSettings.theme + 'ThemeBtn').classList.add('active');
+    }
+
+    function saveSettings() {
+      localStorage.setItem('likealocal_settings', JSON.stringify(appSettings));
+      if (currentUser?.uid) {
+        db.collection('users').doc(currentUser.uid).update({ settings: appSettings }).catch(() => {});
+      }
+    }
+
+    async function loadUserSettings() {
+      if (!currentUser?.uid) return;
+      try {
+        const doc = await db.collection('users').doc(currentUser.uid).get();
+        if (doc.exists && doc.data().settings) {
+          appSettings = { ...appSettings, ...doc.data().settings };
+          document.getElementById('notifToggle').checked = appSettings.notifications;
+          document.getElementById('locationToggle').checked = appSettings.location;
+          applyTheme();
         }
+      } catch (e) { console.error(e); }
+    }
 
-        function toggleMenu(e){if(e)e.preventDefault();document.getElementById('menu').classList.toggle('active');}
-        function closeMenu(e){if(e)e.preventDefault();document.getElementById('menu').classList.remove('active');}
-        function handleMenuClick(e,action){if(e)e.preventDefault();closeMenu();goHome();setTimeout(()=>{if(action==='home')filterGrid('all');else if(action==='favorites')filterGrid('favorites');else alert("Settings:\nNotifications: ON\nLocation: Active\nTheme: Dark");},100);}
-        function setupSearch(){document.getElementById('searchInput').addEventListener('input',e=>{const q=e.target.value.toLowerCase();renderGrid(destinations.filter(d=>d.city.toLowerCase().includes(q)||d.title.toLowerCase().includes(q)));});}
-        function filterGrid(type){document.getElementById('detail-view').classList.remove('slide-in-active');document.getElementById('home-view').classList.remove('slide-out-left');window.scrollTo(0,0);if(type==='favorites'){const f=destinations.filter(d=>d.isFavorite);f.length?renderGrid(f):alert("No favorites yet!");renderGrid();}else renderGrid();}
-        window.handleImageError=(img,fb)=>{img.src=fb;};
-        function setupVoiceSearch(){const btn=document.getElementById('micBtn'),inp=document.getElementById('searchInput'),sec=window.location.protocol==='https:'||window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1',Rec=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Rec){btn.style.display='none';return;}const rec=new Rec();rec.continuous=false;rec.lang='en-US';rec.interimResults=false;const startReal=()=>{try{rec.start();btn.classList.add('listening');}catch(e){try{rec.stop();}catch(e){}setTimeout(startReal,200);}};const sim=()=>{btn.classList.add('listening');alert("SIMULATION: Microphone blocked on non-HTTPS. Simulating 'Dubai'");setTimeout(()=>{inp.value="Simulated: Dubai";renderGrid(destinations.filter(d=>d.city.toLowerCase().includes('dubai')));btn.classList.remove('listening');btn.classList.add('success');setTimeout(()=>btn.classList.remove('success'),2000);},2000);};btn.onclick=()=>sec?startReal():sim();rec.onstart=()=>btn.classList.add('listening');rec.onresult=e=>{inp.value=e.results[0][0].transcript;const q=e.results[0][0].transcript.toLowerCase();renderGrid(destinations.filter(d=>d.city.toLowerCase().includes(q)||d.title.toLowerCase().includes(q)));btn.classList.remove('listening');btn.classList.add('success');setTimeout(()=>btn.classList.remove('success'),2000);};rec.onerror=e=>{btn.classList.remove('listening');if(e.error==='not-allowed')alert("Microphone denied.");else if(e.error==='network')alert("Network error.");};rec.onend=()=>btn.classList.remove('listening');}
-        function renderGrid(data=destinations){document.getElementById('grid').innerHTML=data.map(d=>`<div class="card" onclick="openDetail(${d.id})"><button class="fav-btn ${d.isFavorite?'active':''}" onclick="toggleFavorite(event,${d.id})">${d.isFavorite?'❤️':'🤍'}</button><img src="${d.img}" class="card-img" onerror="handleImageError(this,'${d.backup}')" alt="${d.title}"><div class="card-info"><span class="card-tag">${d.city}</span><h3>${d.title}</h3></div></div>`).join('');}
-        async function toggleFavorite(e,id){if(e)e.stopPropagation();if(!currentUser?.uid){toggleAuth();return;}const ref=db.collection('users').doc(currentUser.uid).collection('favorites').doc(String(id));const doc=await ref.get();if(doc.exists)await ref.delete();else await ref.set({addedAt:firebase.firestore.FieldValue.serverTimestamp()});const d=destinations.find(x=>x.id===id);if(d){d.isFavorite=!d.isFavorite;renderGrid();}}
-        async function loadUserFavorites(){if(!currentUser?.uid)return;const snap=await db.collection('users').doc(currentUser.uid).collection('favorites').get();destinations.forEach(d=>d.isFavorite=false);snap.forEach(doc=>{const d=destinations.find(x=>x.id===parseInt(doc.id));if(d)d.isFavorite=true;});renderGrid();}
-        function toggleAuth(e){if(e)e.stopPropagation();document.getElementById('authModal').classList.toggle('active');}
-        async function handleLogin(e){if(e)e.preventDefault();const em=document.getElementById('emailInput').value,pw=document.getElementById('passwordInput').value,b=document.querySelector('#authModal .btn-primary');b.innerText='Authenticating...';try{await auth.signInWithEmailAndPassword(em,pw);toggleAuth();alert('Welcome back!');}catch(err){alert('Login failed: '+err.message);}b.innerText='Login';}
-        async function handleLogout(){try{await auth.signOut();alert('Logged out.');}catch(err){alert('Logout failed: '+err.message);}}
-        function openDetail(id){currentDestId=id;const d=destinations.find(x=>x.id===id);if(!d)return;document.getElementById('detail-container').innerHTML=`<div class="detail-header"><img src="${d.img}" onerror="handleImageError(this,'${d.backup}')"></div><div class="detail-content"><h2>${d.title}</h2><p style="color:#aaa;margin-bottom:30px;">${d.desc}</p><div class="feature-block"><h3>👁️ The View</h3><p>${d.view}</p></div><div class="feature-block"><h3>🏠 Place to Stay</h3><p>${d.stay}</p></div><div class="feature-block"><h3>🎯 Activity</h3><p>${d.act}</p></div></div>`;document.getElementById('home-view').classList.add('slide-out-left');document.getElementById('detail-view').classList.add('slide-in-active');}
-        function goHome(e){if(e)e.preventDefault();document.getElementById('home-view').classList.remove('slide-out-left');document.getElementById('detail-view').classList.remove('slide-in-active');}
-        function toggleChat(e){if(e)e.stopPropagation();document.getElementById('chatWindow').classList.toggle('active');}
-        async function sendChat(e){if(e)e.preventDefault();const inp=document.getElementById('chatInput'),bod=document.getElementById('chatBody'),txt=inp.value.trim();if(!txt)return;addMsg(txt,'user');inp.value='';const typ=document.createElement('div');typ.className='typing-indicator';typ.innerHTML=`<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>`;bod.appendChild(typ);bod.scrollTop=bod.scrollHeight;try{const d=destinations.find(x=>x.id===currentDestId),cty=d?.city||"unknown",ask=firebase.functions().httpsCallable('askLocalGuide'),res=await ask({city:cty,query:txt,destContext:d?{view:d.view,stay:d.stay,act:d.act}:null});bod.removeChild(typ);addMsg(res.data.response,'ai');if(currentUser?.uid)await db.collection('users').doc(currentUser.uid).collection('chats').doc(new Date().toISOString()).set({destId:currentDestId||null,messages:[{role:'user',text:txt,ts:firebase.firestore.FieldValue.serverTimestamp()},{role:'ai',text:res.data.response,ts:firebase.firestore.FieldValue.serverTimestamp()}]});}catch(err){bod.removeChild(typ);addMsg("AI unavailable. Try again.","ai");console.error(err);}bod.scrollTop=bod.scrollHeight;}
-        function addMsg(t,r){const bod=document.getElementById('chatBody'),m=document.createElement('div');m.className=`msg ${r}`;m.innerText=t;bod.appendChild(m);}
-        document.getElementById('chatInput').addEventListener('keypress',e=>{if(e.key==='Enter')sendChat();});
-    </script>
+    function setTheme(theme) {
+      appSettings.theme = theme;
+      applyTheme();
+      saveSettings();
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(theme + 'ThemeBtn').classList.add('active');
+    }
+
+    function applyTheme() {
+      if (appSettings.theme === 'light') document.body.classList.add('light-theme');
+      else document.body.classList.remove('light-theme');
+    }
+
+    document.getElementById('notifToggle').addEventListener('change', e => {
+      appSettings.notifications = e.target.checked;
+      saveSettings();
+    });
+
+    document.getElementById('locationToggle').addEventListener('change', e => {
+      appSettings.location = e.target.checked;
+      saveSettings();
+    });
+
+    async function loadDestinations() {
+      try {
+        const snap = await db.collection('destinations').orderBy('createdAt', 'desc').get();
+        if (snap.empty) {
+          destinations = [
+            {id:1,city:"Tokyo",title:"Neon Backstreets",desc:"Cyberpunk vibes.",img:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=2940",backup:"https://images.unsplash.com/photo-1551641506-ee5bf4cb45f1?q=80&w=2940",view:"Shibuya Sky",stay:"Capsule Pod",act:"Ramen Crawl",isFavorite:false},
+            {id:2,city:"Paris",title:"Hidden Montmartre",desc:"Artists & cobblestones.",img:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2938",backup:"https://images.unsplash.com/photo-1499856871940-a09627c6d7db?q=80&w=2940",view:"Sacré-Cœur",stay:"Loft 18th",act:"Atelier",isFavorite:false},
+            {id:3,city:"Dubai",title:"Desert Luxury",desc:"Opulence in sand.",img:"https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2940",backup:"https://images.unsplash.com/photo-1512632573886-9d0bf49b4296?q=80&w=2940",view:"Burj Top",stay:"Atlantis Suite",act:"Dune Bashing",isFavorite:false},
+            {id:4,city:"Bali",title:"Tropical Zen",desc:"Rice terraces.",img:"https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=2940",view:"Mount Batur",stay:"Jungle Villa",act:"Yoga",isFavorite:false},
+            {id:5,city:"New York",title:"Brooklyn Industrial",desc:"Warehouses to art.",img:"https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2940",backup:"https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=2940",view:"DUMBO",stay:"Converted Factory",act:"Underground Jazz",isFavorite:false},
+            {id:6,city:"Iceland",title:"Aurora Borealis",desc:"Fire & Ice.",img:"https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=3159",backup:"https://images.unsplash.com/photo-1476610182048-b716b8518aae",view:"Vik Beach",stay:"Glass Igloo",act:"Glacier Hike",isFavorite:false},
+            {id:7,city:"Swiss Alps",title:"Matterhorn",desc:"Peak luxury.",img:"https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2938",backup:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2940",view:"Gornergrat",stay:"Chalet",act:"Skiing",isFavorite:false},
+            {id:8,city:"Santorini",title:"Caldera Views",desc:"Sunset perfection.",img:"https://images.unsplash.com/photo-1613395877344-13d4c79e4df4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?q=80&w=2940",view:"Oia Sunset",stay:"Cave House",act:"Catamaran",isFavorite:false}
+          ];
+        } else {
+          destinations = snap.docs.map(d => ({id: parseInt(d.id), ...d.data(), isFavorite: false}));
+        }
+        renderGrid();
+        renderFavorites();
+      } catch (e) { console.error(e); renderGrid(); renderFavorites(); }
+    }
+
+    function toggleMenu(e) { if (e) e.preventDefault(); document.getElementById('menu').classList.toggle('active'); }
+    function closeMenu(e) { if (e) e.preventDefault(); document.getElementById('menu').classList.remove('active'); }
+    function handleMenuClick(e, action) {
+      if (e) e.preventDefault();
+      closeMenu();
+      document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('slide-in-active'); v.style.display = 'none'; });
+      document.getElementById('home-view').style.display = 'block';
+      if (action === 'home') {
+        document.getElementById('home-view').classList.remove('slide-out-left');
+      } else if (action === 'favorites') {
+        document.getElementById('favorites-view').style.display = 'block';
+        setTimeout(() => document.getElementById('favorites-view').classList.add('slide-in-active'), 10);
+        renderFavorites();
+      } else if (action === 'settings') {
+        document.getElementById('settingsModal').classList.add('active');
+      }
+    }
+    function closeSettings(e) { if (e) e.preventDefault(); document.getElementById('settingsModal').classList.remove('active'); }
+    function setupSearch() {
+      document.getElementById('searchInput').addEventListener('input', e => {
+        const q = e.target.value.toLowerCase();
+        renderGrid(destinations.filter(d => d.city.toLowerCase().includes(q) || d.title.toLowerCase().includes(q)));
+      });
+    }
+    function filterGrid(type) {
+      document.getElementById('detail-view').classList.remove('slide-in-active');
+      document.getElementById('home-view').classList.remove('slide-out-left');
+      window.scrollTo(0, 0);
+      if (type === 'favorites') {
+        const f = destinations.filter(d => d.isFavorite);
+        if (!f.length) alert("No favorites yet!");
+        renderGrid();
+      } else renderGrid();
+    }
+    window.handleImageError = (img, fb) => { img.src = fb; };
+
+    function setupVoiceSearch() {
+      const btn = document.getElementById('micBtn'), inp = document.getElementById('searchInput');
+      const sec = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Rec) { btn.style.display = 'none'; return; }
+      const rec = new Rec();
+      rec.continuous = false; rec.lang = 'en-US'; rec.interimResults = false;
+      const startReal = () => { try { rec.start(); btn.classList.add('listening'); } catch (e) { try { rec.stop(); } catch (e) {} setTimeout(startReal, 200); } };
+      const sim = () => {
+        btn.classList.add('listening');
+        alert("SIMULATION: Microphone blocked on non-HTTPS. Simulating 'Dubai'");
+        setTimeout(() => {
+          inp.value = "Simulated: Dubai";
+          renderGrid(destinations.filter(d => d.city.toLowerCase().includes('dubai')));
+          btn.classList.remove('listening'); btn.classList.add('success');
+          setTimeout(() => btn.classList.remove('success'), 2000);
+        }, 2000);
+      };
+      btn.onclick = () => sec ? startReal() : sim();
+      rec.onstart = () => btn.classList.add('listening');
+      rec.onresult = e => {
+        inp.value = e.results[0][0].transcript;
+        const q = e.results[0][0].transcript.toLowerCase();
+        renderGrid(destinations.filter(d => d.city.toLowerCase().includes(q) || d.title.toLowerCase().includes(q)));
+        btn.classList.remove('listening'); btn.classList.add('success');
+        setTimeout(() => btn.classList.remove('success'), 2000);
+      };
+      rec.onerror = e => { btn.classList.remove('listening'); if (e.error === 'not-allowed') alert("Microphone denied."); else if (e.error === 'network') alert("Network error."); };
+      rec.onend = () => btn.classList.remove('listening');
+    }
+
+    function renderGrid(data = destinations) {
+      document.getElementById('grid').innerHTML = data.map(d =>
+        `<div class="card" onclick="openDetail(${d.id})">
+          <button class="fav-btn ${d.isFavorite ? 'active' : ''}" onclick="toggleFavorite(event,${d.id})">${d.isFavorite ? '❤️' : '🤍'}</button>
+          <img src="${d.img}" class="card-img" onerror="handleImageError(this,'${d.backup}')" alt="${d.title}">
+          <div class="card-info">
+            <span class="card-tag">${d.city}</span>
+            <h3>${d.title}</h3>
+          </div>
+        </div>`
+      ).join('');
+    }
+
+    function renderFavorites() {
+      const favs = destinations.filter(d => d.isFavorite);
+      const grid = document.getElementById('favoritesGrid');
+      const empty = document.getElementById('favoritesEmpty');
+      if (!favs.length) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      grid.innerHTML = favs.map(d =>
+        `<div class="card" onclick="openDetail(${d.id})">
+          <button class="fav-btn active" onclick="toggleFavorite(event,${d.id})">❤️</button>
+          <img src="${d.img}" class="card-img" onerror="handleImageError(this,'${d.backup}')" alt="${d.title}">
+          <div class="card-info">
+            <span class="card-tag">${d.city}</span>
+            <h3>${d.title}</h3>
+          </div>
+        </div>`
+      ).join('');
+    }
+
+    async function toggleFavorite(e, id) {
+      if (e) e.stopPropagation();
+      const d = destinations.find(x => x.id === id);
+      if (!d) return;
+      d.isFavorite = !d.isFavorite;
+      renderGrid();
+      renderFavorites();
+      if (currentUser?.uid) {
+        const ref = db.collection('users').doc(currentUser.uid).collection('favorites').doc(String(id));
+        if (d.isFavorite) await ref.set({ addedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        else await ref.delete();
+      }
+    }
+
+    async function loadUserFavorites() {
+      if (!currentUser?.uid) return;
+      try {
+        const snap = await db.collection('users').doc(currentUser.uid).collection('favorites').get();
+        destinations.forEach(d => d.isFavorite = false);
+        snap.forEach(doc => { const d = destinations.find(x => x.id === parseInt(doc.id)); if (d) d.isFavorite = true; });
+        renderGrid();
+        renderFavorites();
+      } catch (e) { console.error(e); }
+    }
+
+    function toggleAuth(e) { if (e) e.stopPropagation(); document.getElementById('authModal').classList.toggle('active'); }
+    function toggleAuthMode() {
+      const loginForm = document.getElementById('loginForm'), signupForm = document.getElementById('signupForm');
+      const title = document.getElementById('authTitle'), btn = document.getElementById('authToggleBtn');
+      if (loginForm.style.display === 'none') {
+        loginForm.style.display = 'block'; signupForm.style.display = 'none';
+        title.innerText = 'Welcome Back'; btn.innerText = 'Create Account';
+      } else {
+        loginForm.style.display = 'none'; signupForm.style.display = 'block';
+        title.innerText = 'Create Account'; btn.innerText = 'Sign In';
+      }
+    }
+
+    async function handleLogin(e) {
+      if (e) e.preventDefault();
+      const em = document.getElementById('loginEmail').value, pw = document.getElementById('loginPassword').value;
+      const b = document.querySelector('#loginForm .btn-primary'); b.innerText = 'Authenticating...';
+      try { await auth.signInWithEmailAndPassword(em, pw); toggleAuth(); alert('Welcome back!'); } catch (err) { alert('Login failed: ' + err.message); }
+      b.innerText = 'Login';
+    }
+
+    async function handleSignup(e) {
+      if (e) e.preventDefault();
+      const em = document.getElementById('signupEmail').value.trim(), pw = document.getElementById('signupPassword').value, c = document.getElementById('signupConfirm').value;
+      const btn = document.querySelector('#signupForm .btn-primary');
+      if (!em || !pw) { alert('Please fill in all fields.'); return; }
+      if (pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
+      if (pw !== c) { alert('Passwords do not match.'); return; }
+      btn.innerText = 'Creating Account...';
+      try {
+        const userCredential = await auth.createUserWithEmailAndPassword(em, pw);
+        const user = userCredential.user;
+        await db.collection('users').doc(user.uid).set({
+          email: user.email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          settings: appSettings
+        });
+        toggleAuth();
+        alert('Account created successfully! Welcome to LikeALocal.');
+      } catch (err) { alert('Signup failed: ' + err.message); }
+      btn.innerText = 'Create Account';
+    }
+
+    async function handleLogout() { try { await auth.signOut(); alert('Logged out.'); } catch (err) { alert('Logout failed: ' + err.message); } }
+
+    function openDetail(id) {
+      currentDestId = id;
+      const d = destinations.find(x => x.id === id);
+      if (!d) return;
+      document.getElementById('detail-container').innerHTML =
+        `<div class="detail-header"><img src="${d.img}" onerror="handleImageError(this,'${d.backup}')"></div>
+        <div class="detail-content">
+          <h2>${d.title}</h2>
+          <p style="color:#aaa;margin-bottom:30px">${d.desc}</p>
+          <div class="feature-block"><h3>👁️ The View</h3><p>${d.view}</p></div>
+          <div class="feature-block"><h3>🏠 Place to Stay</h3><p>${d.stay}</p></div>
+          <div class="feature-block"><h3>🎯 Activity</h3><p>${d.act}</p></div>
+        </div>`;
+      document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('slide-in-active'); v.style.display = 'none'; });
+      document.getElementById('detail-view').style.display = 'block';
+      setTimeout(() => document.getElementById('detail-view').classList.add('slide-in-active'), 10);
+    }
+
+    function goHome(e) {
+      if (e) e.preventDefault();
+      document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('slide-in-active'); v.style.display = 'none'; });
+      document.getElementById('home-view').style.display = 'block';
+      setTimeout(() => document.getElementById('home-view').classList.remove('slide-out-left'), 10);
+    }
+
+    function toggleChat(e) { if (e) e.stopPropagation(); document.getElementById('chatWindow').classList.toggle('active'); }
+
+    async function sendChat(e) {
+      if (e) e.preventDefault();
+      const inp = document.getElementById('chatInput'), bod = document.getElementById('chatBody'), txt = inp.value.trim();
+      if (!txt) return;
+      addMsg(txt, 'user'); inp.value = '';
+      const typ = document.createElement('div'); typ.className = 'typing-indicator';
+      typ.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+      bod.appendChild(typ); bod.scrollTop = bod.scrollHeight;
+      try {
+        const d = destinations.find(x => x.id === currentDestId), cty = d?.city || "unknown";
+        const askLocalGuide = firebase.functions().httpsCallable('askLocalGuide');
+        const res = await askLocalGuide({ city: cty, query: txt, destContext: d ? { view: d.view, stay: d.stay, act: d.act } : null });
+        bod.removeChild(typ); addMsg(res.data.response, 'ai');
+        if (currentUser?.uid) {
+          await db.collection('users').doc(currentUser.uid).collection('chats').doc(new Date().toISOString()).set({
+            destId: currentDestId || null,
+            messages: [
+              { role: 'user', text: txt, ts: firebase.firestore.FieldValue.serverTimestamp() },
+              { role: 'ai', text: res.data.response, ts: firebase.firestore.FieldValue.serverTimestamp() }
+            ]
+          });
+        }
+      } catch (err) { bod.removeChild(typ); addMsg("AI unavailable. Try again.", 'ai'); console.error(err); }
+      bod.scrollTop = bod.scrollHeight;
+    }
+
+    function addMsg(t, r) { const bod = document.getElementById('chatBody'), m = document.createElement('div'); m.className = `msg ${r}`; m.innerText = t; bod.appendChild(m); }
+    document.getElementById('chatInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendChat(); });
+  </script>
 </body>
 </html>
