@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -104,7 +105,8 @@
 <body>
   <div id="cursor-container"><div class="cursor-dot" id="dot"></div><div class="cursor-ring" id="ring"></div></div>
   <nav><div class="brand">LikeALocal</div><div class="nav-actions"><button class="btn" onclick="toggleMenu(event)">Menu</button><button class="btn btn-primary" id="authBtn" onclick="toggleAuth(event)">Sign In</button></div></nav>
-  <div class="menu-overlay" id="menu"><button class="menu-exit-btn" onclick="toggleMenu(event)">✕</button><button class="menu-link" onclick="handleMenuClick(event,'home')">Home</button><button class="menu-link" onclick="handleMenuClick(event,'favorites')">Favorites</button><button class="menu-link" onclick="handleMenuClick(event,'settings')">Settings</button><button class="menu-link" onclick="toggleAuth(event);closeMenu(event)">Account</button></div>
+  <div class="menu-overlay" id="menu"><button class="menu-exit-btn" onclick="toggleMenu(event)">✕</button><button class="menu-link" onclick="handleMenuClick(event,'home')">Home</button><button class="menu-link" onclick="handleMenuClick(event,'favorites')">Favorites</button><button class="menu-link" onclick="handleMenuClick(event,'settings')">Settings</button><button class="menu-link" onclick="toggleAuth(event);closeMenu()">Account</button></div>
+
   <div class="modal-overlay" id="authModal">
     <div class="modal-box">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
@@ -128,7 +130,6 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-box">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px">
@@ -158,7 +159,7 @@
     <section id="home-view" class="view-section">
       <div class="hero">
         <h1>Discover<br><span>The World</span></h1>
-        <p style="color:rgba(255,255,255,.8);margin-bottom:40px;max-width:600px;margin:0 auto 40px">Curated 4K destinations, local insights, and AI-powered recommendations.</p>
+        <p style="color:rgba(255,255,255,.8);max-width:600px;margin:0 auto 40px">Curated 4K destinations, local insights, and AI-powered recommendations.</p>
         <div class="search-container">
           <input type="text" class="search-input" id="searchInput" placeholder="Search city (e.g., Dubai)...">
           <button class="mic-btn" id="micBtn" title="Use Microphone to Search">🎙️</button>
@@ -179,17 +180,17 @@
       </div>
     </section>
   </main>
+
   <div class="ai-fab" onclick="toggleChat(event)">🤖</div>
   <div class="chat-window" id="chatWindow">
     <div class="chat-header"><span>LocalGuide AI</span><span style="cursor:pointer" onclick="toggleChat(event)">×</span></div>
     <div class="chat-body" id="chatBody"><div class="msg ai">Hello! I'm your AI local guide. I can tell you about food, views, or hotels for any place you select.</div></div>
     <div class="chat-input-area">
       <input type="text" class="chat-input" id="chatInput" placeholder="Ask about current place...">
-      <button class="btn-menu" style="padding:5px 15px" onclick="sendChat(event)">Send</button>
+      <button class="btn" style="padding:5px 15px" onclick="sendChat(event)">Send</button>
     </div>
   </div>
 
-  <!-- Firebase SDK Scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -260,7 +261,18 @@
       });
     }
 
-    // 🔐 Settings Persistence
+    function showView(viewId) {
+      document.querySelectorAll('.view-section').forEach(v => {
+        v.style.display = 'none';
+        v.classList.remove('slide-in-active', 'slide-out-left');
+      });
+      const target = document.getElementById(viewId);
+      target.style.display = 'block';
+      if (viewId !== 'home-view') {
+        setTimeout(() => target.classList.add('slide-in-active'), 10);
+      }
+    }
+
     function loadSettings() {
       const saved = localStorage.getItem('likealocal_settings');
       if (saved) appSettings = JSON.parse(saved);
@@ -271,17 +283,17 @@
 
     function saveSettings() {
       localStorage.setItem('likealocal_settings', JSON.stringify(appSettings));
-      if (currentUser?.uid) {
+      if (currentUser && currentUser.uid) {
         db.collection('users').doc(currentUser.uid).update({ settings: appSettings }).catch(() => {});
       }
     }
 
     async function loadUserSettings() {
-      if (!currentUser?.uid) return;
+      if (!currentUser || !currentUser.uid) return;
       try {
         const doc = await db.collection('users').doc(currentUser.uid).get();
         if (doc.exists && doc.data().settings) {
-          appSettings = { ...appSettings, ...doc.data().settings };
+          appSettings = Object.assign({}, appSettings, doc.data().settings);
           document.getElementById('notifToggle').checked = appSettings.notifications;
           document.getElementById('locationToggle').checked = appSettings.location;
           applyTheme();
@@ -302,15 +314,81 @@
       else document.body.classList.remove('light-theme');
     }
 
-    document.getElementById('notifToggle').addEventListener('change', e => {
+    document.getElementById('notifToggle').addEventListener('change', function(e) {
       appSettings.notifications = e.target.checked;
       saveSettings();
     });
 
-    document.getElementById('locationToggle').addEventListener('change', e => {
+    document.getElementById('locationToggle').addEventListener('change', function(e) {
       appSettings.location = e.target.checked;
       saveSettings();
     });
+
+    function toggleMenu(e) { if (e) e.preventDefault(); document.getElementById('menu').classList.toggle('active'); }
+
+    function closeMenu() { document.getElementById('menu').classList.remove('active'); }
+
+    function handleMenuClick(e, action) {
+      if (e) e.preventDefault();
+      closeMenu();
+      if (action === 'home') {
+        showView('home-view');
+      } else if (action === 'favorites') {
+        renderFavorites();
+        showView('favorites-view');
+      } else if (action === 'settings') {
+        document.getElementById('settingsModal').classList.add('active');
+      }
+    }
+
+    function closeSettings(e) { if (e) e.preventDefault(); document.getElementById('settingsModal').classList.remove('active'); }
+
+    function setupSearch() {
+      document.getElementById('searchInput').addEventListener('input', function(e) {
+        const q = e.target.value.toLowerCase();
+        renderGrid(destinations.filter(d => d.city.toLowerCase().includes(q) || d.title.toLowerCase().includes(q)));
+      });
+    }
+
+    window.handleImageError = function(img, fb) { img.src = fb; };
+
+    function setupVoiceSearch() {
+      const btn = document.getElementById('micBtn'), inp = document.getElementById('searchInput');
+      const sec = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Rec) { btn.style.display = 'none'; return; }
+      const rec = new Rec();
+      rec.continuous = false; rec.lang = 'en-US'; rec.interimResults = false;
+      const startReal = function() {
+        try { rec.start(); btn.classList.add('listening'); }
+        catch (err) { try { rec.stop(); } catch (err2) {} setTimeout(startReal, 200); }
+      };
+      const sim = function() {
+        btn.classList.add('listening');
+        alert("SIMULATION: Microphone blocked on non-HTTPS. Simulating 'Dubai'");
+        setTimeout(function() {
+          inp.value = "Simulated: Dubai";
+          renderGrid(destinations.filter(d => d.city.toLowerCase().includes('dubai')));
+          btn.classList.remove('listening'); btn.classList.add('success');
+          setTimeout(function() { btn.classList.remove('success'); }, 2000);
+        }, 2000);
+      };
+      btn.onclick = function() { if (sec) { startReal(); } else { sim(); } };
+      rec.onstart = function() { btn.classList.add('listening'); };
+      rec.onresult = function(ev) {
+        inp.value = ev.results[0][0].transcript;
+        const q = ev.results[0][0].transcript.toLowerCase();
+        renderGrid(destinations.filter(d => d.city.toLowerCase().includes(q) || d.title.toLowerCase().includes(q)));
+        btn.classList.remove('listening'); btn.classList.add('success');
+        setTimeout(function() { btn.classList.remove('success'); }, 2000);
+      };
+      rec.onerror = function(ev) {
+        btn.classList.remove('listening');
+        if (ev.error === 'not-allowed') alert("Microphone denied.");
+        else if (ev.error === 'network') alert("Network error.");
+      };
+      rec.onend = function() { btn.classList.remove('listening'); };
+    }
 
     async function loadDestinations() {
       try {
@@ -322,100 +400,33 @@
             {id:3,city:"Dubai",title:"Desert Luxury",desc:"Opulence in sand.",img:"https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2940",backup:"https://images.unsplash.com/photo-1512632573886-9d0bf49b4296?q=80&w=2940",view:"Burj Top",stay:"Atlantis Suite",act:"Dune Bashing",isFavorite:false},
             {id:4,city:"Bali",title:"Tropical Zen",desc:"Rice terraces.",img:"https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=2940",view:"Mount Batur",stay:"Jungle Villa",act:"Yoga",isFavorite:false},
             {id:5,city:"New York",title:"Brooklyn Industrial",desc:"Warehouses to art.",img:"https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2940",backup:"https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=2940",view:"DUMBO",stay:"Converted Factory",act:"Underground Jazz",isFavorite:false},
-            {id:6,city:"Iceland",title:"Aurora Borealis",desc:"Fire & Ice.",img:"https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=3159",backup:"https://images.unsplash.com/photo-1476610182048-b716b8518aae",view:"Vik Beach",stay:"Glass Igloo",act:"Glacier Hike",isFavorite:false},
+            {id:6,city:"Iceland",title:"Aurora Borealis",desc:"Fire & Ice.",img:"https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=3159",backup:"https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=3159",view:"Vik Beach",stay:"Glass Igloo",act:"Glacier Hike",isFavorite:false},
             {id:7,city:"Swiss Alps",title:"Matterhorn",desc:"Peak luxury.",img:"https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2938",backup:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2940",view:"Gornergrat",stay:"Chalet",act:"Skiing",isFavorite:false},
             {id:8,city:"Santorini",title:"Caldera Views",desc:"Sunset perfection.",img:"https://images.unsplash.com/photo-1613395877344-13d4c79e4df4?q=80&w=2938",backup:"https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?q=80&w=2940",view:"Oia Sunset",stay:"Cave House",act:"Catamaran",isFavorite:false}
           ];
         } else {
-          destinations = snap.docs.map(d => ({id: parseInt(d.id), ...d.data(), isFavorite: false}));
+          destinations = snap.docs.map(d => Object.assign({id: parseInt(d.id)}, d.data(), {isFavorite: false}));
         }
         renderGrid();
         renderFavorites();
-      } catch (e) { console.error(e); renderGrid(); renderFavorites(); }
+      } catch (err) { console.error(err); renderGrid(); renderFavorites(); }
     }
 
-    function toggleMenu(e) { if (e) e.preventDefault(); document.getElementById('menu').classList.toggle('active'); }
-    function closeMenu(e) { if (e) e.preventDefault(); document.getElementById('menu').classList.remove('active'); }
-    function handleMenuClick(e, action) {
-      if (e) e.preventDefault();
-      closeMenu();
-      document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('slide-in-active'); v.style.display = 'none'; });
-      document.getElementById('home-view').style.display = 'block';
-      if (action === 'home') {
-        document.getElementById('home-view').classList.remove('slide-out-left');
-      } else if (action === 'favorites') {
-        document.getElementById('favorites-view').style.display = 'block';
-        setTimeout(() => document.getElementById('favorites-view').classList.add('slide-in-active'), 10);
-        renderFavorites();
-      } else if (action === 'settings') {
-        document.getElementById('settingsModal').classList.add('active');
-      }
-    }
-    function closeSettings(e) { if (e) e.preventDefault(); document.getElementById('settingsModal').classList.remove('active'); }
-    function setupSearch() {
-      document.getElementById('searchInput').addEventListener('input', e => {
-        const q = e.target.value.toLowerCase();
-        renderGrid(destinations.filter(d => d.city.toLowerCase().includes(q) || d.title.toLowerCase().includes(q)));
-      });
-    }
-    function filterGrid(type) {
-      document.getElementById('detail-view').classList.remove('slide-in-active');
-      document.getElementById('home-view').classList.remove('slide-out-left');
-      window.scrollTo(0, 0);
-      if (type === 'favorites') {
-        const f = destinations.filter(d => d.isFavorite);
-        if (!f.length) alert("No favorites yet!");
-        renderGrid();
-      } else renderGrid();
-    }
-    window.handleImageError = (img, fb) => { img.src = fb; };
-
-    function setupVoiceSearch() {
-      const btn = document.getElementById('micBtn'), inp = document.getElementById('searchInput');
-      const sec = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Rec) { btn.style.display = 'none'; return; }
-      const rec = new Rec();
-      rec.continuous = false; rec.lang = 'en-US'; rec.interimResults = false;
-      const startReal = () => { try { rec.start(); btn.classList.add('listening'); } catch (e) { try { rec.stop(); } catch (e) {} setTimeout(startReal, 200); } };
-      const sim = () => {
-        btn.classList.add('listening');
-        alert("SIMULATION: Microphone blocked on non-HTTPS. Simulating 'Dubai'");
-        setTimeout(() => {
-          inp.value = "Simulated: Dubai";
-          renderGrid(destinations.filter(d => d.city.toLowerCase().includes('dubai')));
-          btn.classList.remove('listening'); btn.classList.add('success');
-          setTimeout(() => btn.classList.remove('success'), 2000);
-        }, 2000);
-      };
-      btn.onclick = () => sec ? startReal() : sim();
-      rec.onstart = () => btn.classList.add('listening');
-      rec.onresult = e => {
-        inp.value = e.results[0][0].transcript;
-        const q = e.results[0][0].transcript.toLowerCase();
-        renderGrid(destinations.filter(d => d.city.toLowerCase().includes(q) || d.title.toLowerCase().includes(q)));
-        btn.classList.remove('listening'); btn.classList.add('success');
-        setTimeout(() => btn.classList.remove('success'), 2000);
-      };
-      rec.onerror = e => { btn.classList.remove('listening'); if (e.error === 'not-allowed') alert("Microphone denied."); else if (e.error === 'network') alert("Network error."); };
-      rec.onend = () => btn.classList.remove('listening');
-    }
-
-    function renderGrid(data = destinations) {
-      document.getElementById('grid').innerHTML = data.map(d =>
-        `<div class="card" onclick="openDetail(${d.id})">
-          <button class="fav-btn ${d.isFavorite ? 'active' : ''}" onclick="toggleFavorite(event,${d.id})">${d.isFavorite ? '❤️' : '🤍'}</button>
-          <img src="${d.img}" class="card-img" onerror="handleImageError(this,'${d.backup}')" alt="${d.title}">
-          <div class="card-info">
-            <span class="card-tag">${d.city}</span>
-            <h3>${d.title}</h3>
-          </div>
-        </div>`
-      ).join('');
+    function renderGrid(data) {
+      if (!data) data = destinations;
+      document.getElementById('grid').innerHTML = data.map(function(d) {
+        return '<div class="card" onclick="openDetail(' + d.id + ')">' +
+          '<button class="fav-btn ' + (d.isFavorite ? 'active' : '') + '" onclick="toggleFavorite(event,' + d.id + ')">' + (d.isFavorite ? '❤️' : '🤍') + '</button>' +
+          '<img src="' + d.img + '" class="card-img" onerror="handleImageError(this,\'' + d.backup + '\')" alt="' + d.title + '">' +
+          '<div class="card-info">' +
+          '<span class="card-tag">' + d.city + '</span>' +
+          '<h3>' + d.title + '</h3>' +
+          '</div></div>';
+      }).join('');
     }
 
     function renderFavorites() {
-      const favs = destinations.filter(d => d.isFavorite);
+      const favs = destinations.filter(function(d) { return d.isFavorite; });
       const grid = document.getElementById('favoritesGrid');
       const empty = document.getElementById('favoritesEmpty');
       if (!favs.length) {
@@ -424,26 +435,25 @@
         return;
       }
       empty.style.display = 'none';
-      grid.innerHTML = favs.map(d =>
-        `<div class="card" onclick="openDetail(${d.id})">
-          <button class="fav-btn active" onclick="toggleFavorite(event,${d.id})">❤️</button>
-          <img src="${d.img}" class="card-img" onerror="handleImageError(this,'${d.backup}')" alt="${d.title}">
-          <div class="card-info">
-            <span class="card-tag">${d.city}</span>
-            <h3>${d.title}</h3>
-          </div>
-        </div>`
-      ).join('');
+      grid.innerHTML = favs.map(function(d) {
+        return '<div class="card" onclick="openDetail(' + d.id + ')">' +
+          '<button class="fav-btn active" onclick="toggleFavorite(event,' + d.id + ')">❤️</button>' +
+          '<img src="' + d.img + '" class="card-img" onerror="handleImageError(this,\'' + d.backup + '\')" alt="' + d.title + '">' +
+          '<div class="card-info">' +
+          '<span class="card-tag">' + d.city + '</span>' +
+          '<h3>' + d.title + '</h3>' +
+          '</div></div>';
+      }).join('');
     }
 
     async function toggleFavorite(e, id) {
       if (e) e.stopPropagation();
-      const d = destinations.find(x => x.id === id);
+      const d = destinations.find(function(x) { return x.id === id; });
       if (!d) return;
       d.isFavorite = !d.isFavorite;
       renderGrid();
       renderFavorites();
-      if (currentUser?.uid) {
+      if (currentUser && currentUser.uid) {
         const ref = db.collection('users').doc(currentUser.uid).collection('favorites').doc(String(id));
         if (d.isFavorite) await ref.set({ addedAt: firebase.firestore.FieldValue.serverTimestamp() });
         else await ref.delete();
@@ -451,17 +461,21 @@
     }
 
     async function loadUserFavorites() {
-      if (!currentUser?.uid) return;
+      if (!currentUser || !currentUser.uid) return;
       try {
         const snap = await db.collection('users').doc(currentUser.uid).collection('favorites').get();
-        destinations.forEach(d => d.isFavorite = false);
-        snap.forEach(doc => { const d = destinations.find(x => x.id === parseInt(doc.id)); if (d) d.isFavorite = true; });
+        destinations.forEach(function(d) { d.isFavorite = false; });
+        snap.forEach(function(doc) {
+          const d = destinations.find(function(x) { return x.id === parseInt(doc.id); });
+          if (d) d.isFavorite = true;
+        });
         renderGrid();
         renderFavorites();
-      } catch (e) { console.error(e); }
+      } catch (err) { console.error(err); }
     }
 
     function toggleAuth(e) { if (e) e.stopPropagation(); document.getElementById('authModal').classList.toggle('active'); }
+
     function toggleAuthMode() {
       const loginForm = document.getElementById('loginForm'), signupForm = document.getElementById('signupForm');
       const title = document.getElementById('authTitle'), btn = document.getElementById('authToggleBtn');
@@ -508,27 +522,23 @@
 
     function openDetail(id) {
       currentDestId = id;
-      const d = destinations.find(x => x.id === id);
+      const d = destinations.find(function(x) { return x.id === id; });
       if (!d) return;
       document.getElementById('detail-container').innerHTML =
-        `<div class="detail-header"><img src="${d.img}" onerror="handleImageError(this,'${d.backup}')"></div>
-        <div class="detail-content">
-          <h2>${d.title}</h2>
-          <p style="color:#aaa;margin-bottom:30px">${d.desc}</p>
-          <div class="feature-block"><h3>👁️ The View</h3><p>${d.view}</p></div>
-          <div class="feature-block"><h3>🏠 Place to Stay</h3><p>${d.stay}</p></div>
-          <div class="feature-block"><h3>🎯 Activity</h3><p>${d.act}</p></div>
-        </div>`;
-      document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('slide-in-active'); v.style.display = 'none'; });
-      document.getElementById('detail-view').style.display = 'block';
-      setTimeout(() => document.getElementById('detail-view').classList.add('slide-in-active'), 10);
+        '<div class="detail-header"><img src="' + d.img + '" onerror="handleImageError(this,\'' + d.backup + '\')"></div>' +
+        '<div class="detail-content">' +
+        '<h2>' + d.title + '</h2>' +
+        '<p style="color:#aaa;margin-bottom:30px">' + d.desc + '</p>' +
+        '<div class="feature-block"><h3>👁️ The View</h3><p>' + d.view + '</p></div>' +
+        '<div class="feature-block"><h3>🏠 Place to Stay</h3><p>' + d.stay + '</p></div>' +
+        '<div class="feature-block"><h3>🎯 Activity</h3><p>' + d.act + '</p></div>' +
+        '</div>';
+      showView('detail-view');
     }
 
     function goHome(e) {
       if (e) e.preventDefault();
-      document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('slide-in-active'); v.style.display = 'none'; });
-      document.getElementById('home-view').style.display = 'block';
-      setTimeout(() => document.getElementById('home-view').classList.remove('slide-out-left'), 10);
+      showView('home-view');
     }
 
     function toggleChat(e) { if (e) e.stopPropagation(); document.getElementById('chatWindow').classList.toggle('active'); }
@@ -542,11 +552,12 @@
       typ.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
       bod.appendChild(typ); bod.scrollTop = bod.scrollHeight;
       try {
-        const d = destinations.find(x => x.id === currentDestId), cty = d?.city || "unknown";
+        const d = destinations.find(function(x) { return x.id === currentDestId; });
+        const cty = (d && d.city) ? d.city : 'unknown';
         const askLocalGuide = firebase.functions().httpsCallable('askLocalGuide');
         const res = await askLocalGuide({ city: cty, query: txt, destContext: d ? { view: d.view, stay: d.stay, act: d.act } : null });
         bod.removeChild(typ); addMsg(res.data.response, 'ai');
-        if (currentUser?.uid) {
+        if (currentUser && currentUser.uid) {
           await db.collection('users').doc(currentUser.uid).collection('chats').doc(new Date().toISOString()).set({
             destId: currentDestId || null,
             messages: [
@@ -559,8 +570,13 @@
       bod.scrollTop = bod.scrollHeight;
     }
 
-    function addMsg(t, r) { const bod = document.getElementById('chatBody'), m = document.createElement('div'); m.className = `msg ${r}`; m.innerText = t; bod.appendChild(m); }
-    document.getElementById('chatInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendChat(); });
+    function addMsg(t, r) {
+      const bod = document.getElementById('chatBody'), m = document.createElement('div');
+      m.className = 'msg ' + r; m.innerText = t; bod.appendChild(m);
+    }
+
+    document.getElementById('chatInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') sendChat(); });
   </script>
 </body>
 </html>
+```
